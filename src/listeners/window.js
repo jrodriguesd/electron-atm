@@ -8,10 +8,16 @@ $(function () {
   const settings = nodeRequire('electron-settings');
   const mousetrap = nodeRequire('mousetrap');
   const path = nodeRequire('path')
+  const Trace = nodeRequire('atm-trace');
 
   image_path = settings.get('image_path');
   if(image_path)
     image_path = image_path[0];
+
+  $("#receipt").dialog({
+      autoOpen: false,
+	  width: 400,
+  });
 
   /**
    * Navigation
@@ -55,13 +61,22 @@ $(function () {
     })
   });
 
-  replaceOnScreenText = function(){
+  var displayed_screen = '';
+  replaceOnScreenText = function()
+  {
     var screen_text = atm.display.getHTML();
-    if(screen_text){
-      screen_rows.forEach( (element) => {
+
+	if (displayed_screen !== current_screen)
+        $("#imgContainer").remove();
+
+    if(screen_text)
+	{
+      screen_rows.forEach( (element) => 
+	  {
         $( '#' + element + '-screen-row').html(screen_text[element]);
       });
-     }
+    }
+    displayed_screen = current_screen;
   };
   
   /**
@@ -89,15 +104,33 @@ $(function () {
     e.preventDefault();
   });
 
+  function c2i(c)
+  {
+    var coords = '@ABCDEFGHIJKLMNO0123456789:;<=>?';
+    for (var i=0; i <= coords.length; i++)
+      if (coords.charAt(i) == c)
+        return i;
+  }
+
+  function i2c(i)
+  {
+  	var coords = '_ABCDEFGHIJKLMNO0123456789:;<=>?';
+  	return coords.charAt(i);
+  }
+
   // Updating screen image
   var screen_rows = ['at','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O'];  
   ipc.on('ui-change-screen-image', (event, image) => {
-    if(image){
+    if(image)
+	{
+	  console.log('JFRD listeners\\windows.js Line 122 image >' + image + '<')
       var screen = atm.display.getScreen();
 
       // Clear text
-      if(screen && screen.clear_screen){
-        screen_rows.forEach( (element) => {
+      if(screen && screen.clear_screen)
+	  {
+        screen_rows.forEach( (element) => 
+		{
           $( '#' + element + '-screen-row').html('');
         });
       }
@@ -105,11 +138,13 @@ $(function () {
       replaceOnScreenText();
 
       // Changing image
-      $('#screen').attr("src", image_path + '/' + image);
+      $('#screen').attr('src', image_path + '/' + image);
     }
+		
   })
 
-  setInterval(function() {
+  setInterval(function() 
+  {
     replaceOnScreenText();
   }, 200);
 

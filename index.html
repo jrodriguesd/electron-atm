@@ -1,669 +1,598 @@
 <html>
- <head>
-  <title>Electron ATM</title>
-
-  <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.css"> 
-  <link rel="stylesheet" href="./css/styles.css">
-  <link href="node_modules/vis/dist/vis.css" rel="stylesheet" type="text/css" />
-  
-  <script src="node_modules/vis/dist/vis.js"></script>
-
-  <script>
-    require('babel-register')
-  </script>
-
-  <script>
-    window.nodeRequire = require;
-    delete window.require;
-    delete window.exports;
-    delete window.module;
-  </script>
-  <script src="node_modules/jquery/dist/jquery.js"></script>
-  <script src="node_modules/jquery-validation/dist/jquery.validate.js"></script>
-
- </head>
-  <body>
-   <div id="container" class="container-fluid">
-
-      <nav id="navbar" class="navbar navbar-default" hidden="true">
-        <div class="container-fluid">
-          <!-- Brand and toggle get grouped for better mobile display -->
-          <div class="navbar-header">
-            <button id="atm-status-button" type="button" class="btn btn-md connection-button" aria-label="Left Align">
-              <span id="atm-status-icon" class="glyphicon" aria-hidden="true" style="vertical-align:middle"></span>
-            </button>
-          </div>
-
-          <!-- Collect the nav links, forms, and other content for toggling -->
-          <div class="collapse navbar-collapse menu-buttons" id="menu-buttons">
-            <ul class="nav navbar-nav">              
-              <li><button type="button" id="atm-button-menu" data-section="menus" class="nav-button">ATM</button></li>
-              <li><button type="button" id="states-button-menu" data-section="menus" class="nav-button active">States</button></li>
-              <li><button type="button" id="screens-button-menu" data-section="menus" class="nav-button">Screens</button></li>
-              <li><button type="button" id="fits-button-menu" data-section="menus" class="nav-button">FITs</button></li>
-              <li><button type="button" id="emv-button-menu" data-section="menus" class="nav-button">EMV</button></li>
-              <li><button type="button" id="cards-button-menu" data-section="menus" class="nav-button">Cards</button></li>
-              <li><button type="button" id="hardware-button-menu" data-section="menus" class="nav-button">Hardware</button></li>
-            </ul>
-
-            <form id="search-state-form" class="navbar-form navbar-left" hidden="true">
-              <div class="form-group">
-                <input type="number" class="form-control buffer-6" id="search-state-input" value=""></input>
-              </div>
-              <button type="submit" class="btn btn-default" id="search-state-button">Search</button>
-            </form>
-
-            <form id="atm-buffers" class="navbar-form navbar-right">
-              <div class="form-group">
-                <input type="text" class="form-control buffer-6 letter-spacing" id="current-state" value="" title="State" placeholder="State" disabled></input>
-                <input type="text" class="form-control buffer-8 letter-spacing" id="current-screen" value="" title="Screen" placeholder="Screen" disabled></input>
-                <input type="text" class="form-control buffer-8 letter-spacing" id="pin-buffer" value="" title="PIN Buffer" placeholder="Buffer A" disabled></input>
-                <input type="text" class="form-control buffer-12 letter-spacing" id="B-buffer" value="" title="Buffer B" placeholder="Buffer B" disabled></input>
-                <input type="text" class="form-control buffer-12 letter-spacing" id="C-buffer" value="" title="Buffer C" placeholder="Buffer C" disabled></input>
-                <input type="text" class="form-control buffer-8 letter-spacing" id="opcode-buffer" value="" title="Operation Code Buffer" placeholder="Opcode" disabled></input>
-                <input type="text" class="form-control buffer-12 letter-spacing" id="amount-buffer" value="" title="Amount Buffer" placeholder="Amount Buffer" disabled></input>
-              </div>
-            </form>
-
-            <form id="states-opcode-buffer-form" class="navbar-form navbar-center" hidden="true">
-              <div class="form-group">
-                <input type="text" class="form-control buffer-8 letter-spacing" id="states-opcode-buffer" value="" title="Operation Code Buffer" placeholder="Opcode" disabled></input>
-              </div>
-            </form>
-
-            <form id="cards-page-form" class="navbar-form navbar-right" hidden="true">
-              <div id="show-new-card-button-area">
-                <button class="btn btn-success" id="show-new-card-form-button">➕ Add Card</button>
-              </div>
-              <div hidden="true" id="hide-new-card-button-area">
-                <button class="btn btn-success" id="save-new-card-button">
-                  <span class="glyphicon glyphicon-ok-circle" aria-hidden="true"></span> Save
-                </button>
-
-                <button class="btn btn-default" id="cancel-new-card-form-button">Cancel</button>
-              </div>
-            </form>
-
-          </div><!-- /.navbar-collapse -->
-        </div><!-- /.container-fluid -->
-      </nav>
-
-      <!-- Connection form -->
-      <div id="settings-page">
-        <div class="container">
-    <div class="row">
-
-      <div class="col-md-7 col-md-offset-3">
-        <form role="form" id="settings-form" method="POST" action="#">
-          <fieldset>
-            <legend>ATM Connection Details</legend>
-
-            <div class="form-group col-md-4">
-              <label for="settings-atm-host">ATM Host address</label>
-              <input type="text" class="form-control" name="settings-atm-host" id="settings-atm-host" placeholder="atm.example.com" title="Valid IP or hostname required" required>
+   <head>
+      <title>Electron ATM</title>
+      <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.css">
+      <link rel="stylesheet" href="node_modules/jquery-ui-dist/jquery-ui.css">
+      <link rel="stylesheet" href="./css/styles.css">
+      <link href="node_modules/vis/dist/vis.css" rel="stylesheet" type="text/css" />
+      <script src="node_modules/vis/dist/vis.js"></script>
+      <script>
+         require('babel-register')
+      </script>
+      <script>
+         window.nodeRequire = require;
+         delete window.require;
+         delete window.exports;
+         delete window.module;
+      </script>
+      <script src="node_modules/jquery/dist/jquery.js"></script>
+      <script src="node_modules/jquery-ui-dist/jquery-ui.js"></script>
+      <script src="node_modules/jquery-validation/dist/jquery.validate.js"></script>
+   </head>
+   <body>
+      <div id="container" class="container-fluid">
+         <nav id="navbar" class="navbar navbar-default" hidden="true">
+            <div class="container-fluid">
+               <!-- Brand and toggle get grouped for better mobile display -->
+               <div class="navbar-header">
+                  <button id="atm-status-button" type="button" class="btn btn-md connection-button" aria-label="Left Align">
+                  <span id="atm-status-icon" class="glyphicon" aria-hidden="true" style="vertical-align:middle"></span>
+                  </button>
+               </div>
+               <!-- Collect the nav links, forms, and other content for toggling -->
+               <div class="collapse navbar-collapse menu-buttons" id="menu-buttons">
+                  <ul class="nav navbar-nav">
+                     <li><button type="button" id="atm-button-menu" data-section="menus" class="nav-button">ATM</button></li>
+                     <li><button type="button" id="states-button-menu" data-section="menus" class="nav-button active">States</button></li>
+                     <li><button type="button" id="screens-button-menu" data-section="menus" class="nav-button">Screens</button></li>
+                     <li><button type="button" id="fits-button-menu" data-section="menus" class="nav-button">FITs</button></li>
+                     <li><button type="button" id="emv-button-menu" data-section="menus" class="nav-button">EMV</button></li>
+                     <li><button type="button" id="cards-button-menu" data-section="menus" class="nav-button">Cards</button></li>
+                     <li><button type="button" id="hardware-button-menu" data-section="menus" class="nav-button">Hardware</button></li>
+                  </ul>
+                  <form id="search-state-form" class="navbar-form navbar-left" hidden="true">
+                     <div class="form-group">
+                        <input type="number" class="form-control buffer-6" id="search-state-input" value=""></input>
+                     </div>
+                     <button type="submit" class="btn btn-default" id="search-state-button">Search</button>
+                  </form>
+                  <form id="atm-buffers" class="navbar-form navbar-right">
+                     <div class="form-group">
+                        <input type="text" class="form-control buffer-6 letter-spacing" id="current-state" value="" title="State" placeholder="State" disabled></input>
+                        <input type="text" class="form-control buffer-8 letter-spacing" id="current-screen" value="" title="Screen" placeholder="Screen" disabled></input>
+                        <input type="text" class="form-control buffer-8 letter-spacing" id="pin-buffer" value="" title="PIN Buffer" placeholder="Buffer A" disabled></input>
+                        <input type="text" class="form-control buffer-12 letter-spacing" id="B-buffer" value="" title="Buffer B" placeholder="Buffer B" disabled></input>
+                        <input type="text" class="form-control buffer-12 letter-spacing" id="C-buffer" value="" title="Buffer C" placeholder="Buffer C" disabled></input>
+                        <input type="text" class="form-control buffer-8 letter-spacing" id="opcode-buffer" value="" title="Operation Code Buffer" placeholder="Opcode" disabled></input>
+                        <input type="text" class="form-control buffer-12 letter-spacing" id="amount-buffer" value="" title="Amount Buffer" placeholder="Amount Buffer" disabled></input>
+                     </div>
+                  </form>
+                  <form id="states-opcode-buffer-form" class="navbar-form navbar-center" hidden="true">
+                     <div class="form-group">
+                        <input type="text" class="form-control buffer-8 letter-spacing" id="states-opcode-buffer" value="" title="Operation Code Buffer" placeholder="Opcode" disabled></input>
+                     </div>
+                  </form>
+                  <form id="cards-page-form" class="navbar-form navbar-right" hidden="true">
+                     <div id="show-new-card-button-area">
+                        <button class="btn btn-success" id="show-new-card-form-button">➕ Add Card</button>
+                     </div>
+                     <div hidden="true" id="hide-new-card-button-area">
+                        <button class="btn btn-success" id="save-new-card-button">
+                        <span class="glyphicon glyphicon-ok-circle" aria-hidden="true"></span> Save
+                        </button>
+                        <button class="btn btn-default" id="cancel-new-card-form-button">Cancel</button>
+                     </div>
+                  </form>
+               </div>
+               <!-- /.navbar-collapse -->
             </div>
-
-            <div class="form-group col-md-2">
-              <label for="settings-atm-port">TCP Port</label>
-              <input type="text" class="form-control" name="settings-atm-port" id="settings-atm-port" title="TCP Port" placeholder="12345" maxlength="5" required>
+            <!-- /.container-fluid -->
+         </nav>
+         <nav class="navbar navbar-default" id="atm-bottom-navbar" hidden="true">
+            <div class="container-fluid">
+               <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                  <form id="card-read-form" class="navbar-form navbar-left" title="">
+                     <div class="form-group">
+                        <select class="form-control" id="atm-page-cards-list">
+                        </select>
+                     </div>
+                     <button type="submit" class="btn btn-default" id="card-inserted">Read Card</button>
+                     <button type="submit" class="btn btn-success" id="atm-no-cards-add-card">Create Card</button>
+                  </form>
+                  <form id="keys-form buffers" class="navbar-form navbar-right keys-form ">
+                     <div class="form-group">
+                        <input type="text" class="form-control buffer-32" id="master-key" value="" placeholder="Master Key" title="Master Key Clear Value" disabled></input>
+                        <input type="text" class="form-control buffer-6" id="master-key-cv" value="" placeholder="KCV" title="Master Key Check Value" disabled></input>
+                        <input type="text" class="form-control buffer-32" id="pin-key" value="" placeholder="Communications Key Clear Value" title="Communications Key" disabled></input>
+                        <input type="text" class="form-control buffer-6" id="pin-key-cv" value="" placeholder="KCV" title="Communications Key Check Value" disabled></input>
+                     </div>
+                  </form>
+               </div>
+               <!-- /.navbar-collapse -->
             </div>
-
-            <div class="form-group col-md-3">
-              <label for="settings-luno">LUNO</label>
-              <input type="text" class="form-control" name="settings-luno" id="settings-luno" placeholder="000" title="3 or 9 numeric characters" minlength="3" maxlength="9" required>
+            <!-- /.container-fluid -->
+         </nav>
+         <!-- Connection form -->
+         <div id="settings-page">
+            <div class="container">
+               <div class="row">
+                  <div class="col-md-7 col-md-offset-3">
+                     <form role="form" id="settings-form" method="POST" action="#">
+                        <fieldset>
+                           <legend>ATM Connection Details</legend>
+                           <div class="form-group col-md-4">
+                              <label for="settings-atm-host">ATM Host address</label>
+                              <input type="text" class="form-control" name="settings-atm-host" id="settings-atm-host" placeholder="atm.example.com" title="Valid IP or hostname required" required>
+                           </div>
+                           <div class="form-group col-md-2">
+                              <label for="settings-atm-port">TCP Port</label>
+                              <input type="text" class="form-control" name="settings-atm-port" id="settings-atm-port" title="TCP Port" placeholder="12345" maxlength="5" required>
+                           </div>
+                           <div class="form-group col-md-3">
+                              <label for="settings-luno">LUNO</label>
+                              <input type="text" class="form-control" name="settings-luno" id="settings-luno" placeholder="000" title="3 or 9 numeric characters" minlength="3" maxlength="9" required>
+                           </div>
+                           <div class="form-group col-md-3">
+                              <label for="settings-header">Header</label>
+                              <input type="text" class="form-control" name="settings-header" id="settings-header" placeholder="" title="Protocol-dependent header. Leave empty when in doubt">
+                           </div>
+                        </fieldset>
+                        <fieldset>
+                           <legend>Keys</legend>
+                           <div class="form-group col-md-9">
+                              <label for="settings-master-key">Terminal Master Key</label>
+                              <input type="text" class="form-control" name="settings-master-key" id="settings-master-key" placeholder="0A0F 0A0F 0A0F 0A0F 0A0F 0A0F 0A0F 0A0F" title="3DES Double Length Key (32 hex characters) required" minlength="32" maxlength="32" required>
+                           </div>
+                           <div class="form-group col-md-3">
+                              <label for="settings-master-key-cv">Check Value</label>
+                              <input type="text" class="form-control" name="settings-master-key-cv" id="settings-master-key-cv" placeholder="" disabled="">
+                           </div>
+                           <div class="form-group col-md-9">
+                              <label for="settings-pin-key">Communications Key (Terminal PIN Key)</label>
+                              <input type="text" class="form-control" name="settings-pin-key" id="settings-pin-key" placeholder="0A0F 0A0F 0A0F 0A0F 0A0F 0A0F 0A0F 0A0F" title="3DES Double Length Key (32 hex characters) required" minlength="32" maxlength="32" required>
+                           </div>
+                           <div class="form-group col-md-3">
+                              <label for="port">Check Value</label>
+                              <input type="text" class="form-control" name="settings-pin-key-cv" id="settings-pin-key-cv" placeholder="" disabled="">
+                           </div>
+                        </fieldset>
+                        <fieldset>
+                           <legend>Image Path</legend>
+                           <!--
+                              <div class="form-group col-md-12">
+                                <label for="found_site">How did you find out about the site?</label>
+                                <select class="form-control" name="" id="found_site">
+                                  <option>Company</option>
+                                  <option>Friend</option>
+                                  <option>Colleague</option>
+                                  <option>Advertisement</option>
+                                  <option>Google Search</option>
+                                  <option>Online Article</option>
+                                  <option value="other" >Other</option>
+                                </select>
+                              </div>
+                              
+                              <div class="form-group col-md-12 hidden">
+                                <label for="specify">Please Specify</label>
+                                <textarea class="form-control" id="specify" name=""></textarea>
+                              </div>
+                              -->
+                           <div class="form-group col-md-10">
+                              <input type="text" class="form-control" name="images-path" id="images-path" placeholder="Path to the ATM images (required)" title="Path to the ATM images (required)" required>
+                           </div>
+                           <div class="form-group col-md-2">
+                              <button id="open-file-manager" class="btn btn-default glyphicon glyphicon-folder-open"></button>
+                           </div>
+                        </fieldset>
+                        <!--
+                           <div class="form-group">
+                             <div class="col-md-12">
+                               <div class="checkbox">
+                                 <label>
+                                   <input type="checkbox" value="" id="">
+                                   Save this profile for a future use
+                                 </label>
+                               </div>
+                             </div>
+                           </div>
+                           -->
+                        <fieldset>
+                           <legend>Profile Name</legend>
+                           <div class="form-group col-md-12">
+                              <input type="text" class="form-control" name="profile-name" id="profile-name" placeholder="Test ATM 1234">
+                           </div>
+                        </fieldset>
+                        <div class="form-group">
+                           <div class="col-md-12">
+                              <button type="submit" class="btn btn-primary" id="settings-submit-button" disabled>
+                              Continue
+                              </button>
+                           </div>
+                        </div>
+                     </form>
+                  </div>
+               </div>
             </div>
-
-            <div class="form-group col-md-3">
-              <label for="settings-header">Header</label>
-              <input type="text" class="form-control" name="settings-header" id="settings-header" placeholder="" title="Protocol-dependent header. Leave empty when in doubt">
+         </div>
+         <!-- ATM -->
+         <div class="row main-area" id="atm-page" hidden="true">
+            <div class="col-md-1 fdk-button-block">
+               <button id="FDK-I" type="submit" class="btn btn-lg btn-block fdk-button" disabled>I</button>
+               <button id="FDK-H" type="submit" class="btn btn-lg btn-block fdk-button" disabled>H</button>
+               <button id="FDK-G" type="submit" class="btn btn-lg btn-block fdk-button" disabled>G</button>
+               <button id="FDK-F" type="submit" class="btn btn-lg btn-block fdk-button" disabled>F</button>
             </div>
-          </fieldset>
-
-          <fieldset>
-            <legend>Keys</legend>
-            <div class="form-group col-md-9">
-              <label for="settings-master-key">Terminal Master Key</label>
-              <input type="text" class="form-control" name="settings-master-key" id="settings-master-key" placeholder="0A0F 0A0F 0A0F 0A0F 0A0F 0A0F 0A0F 0A0F" title="3DES Double Length Key (32 hex characters) required" minlength="32" maxlength="32" required>
-            </div>
-
-            <div class="form-group col-md-3">
-              <label for="settings-master-key-cv">Check Value</label>
-              <input type="text" class="form-control" name="settings-master-key-cv" id="settings-master-key-cv" placeholder="" disabled="">
-            </div>
-
-            <div class="form-group col-md-9">
-              <label for="settings-pin-key">Communications Key (Terminal PIN Key)</label>
-              <input type="text" class="form-control" name="settings-pin-key" id="settings-pin-key" placeholder="0A0F 0A0F 0A0F 0A0F 0A0F 0A0F 0A0F 0A0F" title="3DES Double Length Key (32 hex characters) required" minlength="32" maxlength="32" required>
-            </div>
-
-            <div class="form-group col-md-3">
-              <label for="port">Check Value</label>
-              <input type="text" class="form-control" name="settings-pin-key-cv" id="settings-pin-key-cv" placeholder="" disabled="">
-            </div>
-          </fieldset>
-
-          <fieldset>
-            <legend>Image Path</legend>
-<!--
-            <div class="form-group col-md-12">
-              <label for="found_site">How did you find out about the site?</label>
-              <select class="form-control" name="" id="found_site">
-                <option>Company</option>
-                <option>Friend</option>
-                <option>Colleague</option>
-                <option>Advertisement</option>
-                <option>Google Search</option>
-                <option>Online Article</option>
-                <option value="other" >Other</option>
-              </select>
-            </div>
-
-            <div class="form-group col-md-12 hidden">
-              <label for="specify">Please Specify</label>
-              <textarea class="form-control" id="specify" name=""></textarea>
-            </div>
--->
-          <div class="form-group col-md-10">
-            <input type="text" class="form-control" name="images-path" id="images-path" placeholder="Path to the ATM images (required)" title="Path to the ATM images (required)" required>
-          </div>
-          <div class="form-group col-md-2">
-            <button id="open-file-manager" class="btn btn-default glyphicon glyphicon-folder-open"></button>
-          </div>
-
-          </fieldset>
-<!--
-          <div class="form-group">
-            <div class="col-md-12">
-              <div class="checkbox">
-                <label>
-                  <input type="checkbox" value="" id="">
-                  Save this profile for a future use
-                </label>
-              </div>
-            </div>
-          </div>
--->
-          <fieldset>
-            <legend>Profile Name</legend>
-
-            <div class="form-group col-md-12">
-              <input type="text" class="form-control" name="profile-name" id="profile-name" placeholder="Test ATM 1234">
-            </div>
-          </fieldset>
-
-          <div class="form-group">
-            <div class="col-md-12">
-              <button type="submit" class="btn btn-primary" id="settings-submit-button" disabled>
-                Continue
-              </button>
-            </div>
-          </div>
-
-        </form>
-      </div>
-
-    </div>
-  </div>
-      </div>
-      
-      <!-- ATM -->
-      <div class="row main-area" id="atm-page" hidden="true">        
-        <div class="col-md-1 fdk-button-block">
-          <button id="FDK-I" type="submit" class="btn btn-lg btn-block fdk-button" disabled>I</button>
-          <button id="FDK-H" type="submit" class="btn btn-lg btn-block fdk-button" disabled>H</button>
-          <button id="FDK-G" type="submit" class="btn btn-lg btn-block fdk-button" disabled>G</button>
-          <button id="FDK-F" type="submit" class="btn btn-lg btn-block fdk-button" disabled>F</button>
-        </div>
-        
+            <!-- ATM Screen-->
         <!-- ATM Screen-->
         <div id="screen-container" class="col-md-5 terminal-screen">
-          <img id="screen" src="img/electronlogo.png" width="640" height="480">          
+          <img src="img/electronlogo.png" style="position: absolute; z-index: -2">
+          <img id="screen" src="img/electronlogo.png"style="z-index: -1; border: none;">
           <div id="coordinates-row" class="coordinates-row coordinates">@ABCDEFGHIJKLMNO0123456789:;<=>?</div>
           <div class="on-screen-text">
-            <div id="at-coordinate-row" class="at-coordinate-row coordinates">@</div>
-            <div id="at-screen-row" class="at-screen-row"></div>
-
-            <div id="A-coordinate-row" class="A-coordinate-row coordinates">A</div>
-            <div id="A-screen-row" class="A-screen-row"></div>
-
-            <div id="B-coordinate-row" class="B-coordinate-row coordinates">B</div>
-            <div id="B-screen-row" class="B-screen-row"></div>
-            
-            <div id="C-coordinate-row" class="C-coordinate-row coordinates">C</div>            
-            <div id="C-screen-row" class="C-screen-row"></div>
-            
-            <div id="D-coordinate-row" class="D-coordinate-row coordinates">D</div>            
-            <div id="D-screen-row" class="D-screen-row"></div>
-            
-            <div id="E-coordinate-row" class="E-coordinate-row coordinates">E</div>            
-            <div id="E-screen-row" class="E-screen-row"></div>
-
-            <div id="F-coordinate-row" class="F-coordinate-row coordinates">F</div>            
-            <div id="F-screen-row" class="F-screen-row"></div>
-
-            <div id="G-coordinate-row" class="G-coordinate-row coordinates">G</div>            
-            <div id="G-screen-row" class="G-screen-row"></div>
-
-            <div id="H-coordinate-row" class="H-coordinate-row coordinates">H</div>            
-            <div id="H-screen-row" class="H-screen-row"></div>
-
-            <div id="I-coordinate-row" class="I-coordinate-row coordinates">I</div>            
-            <div id="I-screen-row" class="I-screen-row"></div>
-
-            <div id="J-coordinate-row" class="J-coordinate-row coordinates">J</div>            
-            <div id="J-screen-row" class="J-screen-row"></div>
-
-            <div id="K-coordinate-row" class="K-coordinate-row coordinates">K</div>            
-            <div id="K-screen-row" class="K-screen-row"></div>
-
-            <div id="L-coordinate-row" class="L-coordinate-row coordinates">L</div>            
-            <div id="L-screen-row" class="L-screen-row"></div>
-
-            <div id="M-coordinate-row" class="M-coordinate-row coordinates">M</div>            
-            <div id="M-screen-row" class="M-screen-row"></div>
-
-            <div id="N-coordinate-row" class="N-coordinate-row coordinates">N</div>            
-            <div id="N-screen-row" class="N-screen-row"></div>
-
-            <div id="O-coordinate-row" class="O-coordinate-row coordinates">O</div>            
-            <div id="O-screen-row" class="O-screen-row"></div>
-          </div>
-        </div>
-
-        <div id="FDK-block-right" class="col-md-1 fdk-button-block">
-          <button id="FDK-A" type="submit" class="btn btn-lg btn-block fdk-button" disabled>A</button>
-          <button id="FDK-B" type="submit" class="btn btn-lg btn-block fdk-button" disabled>B</button>
-          <button id="FDK-C" type="submit" class="btn btn-lg btn-block fdk-button" disabled>C</button>
-          <button id="FDK-D" type="submit" class="btn btn-lg btn-block fdk-button" disabled>D</button>
-        </div>
-
-        <div class="col-md-5">
-          <pre id="log-output" class="log-output" type="text"></pre>
-        </div>
-      </div>
-
-      <!-- STATES -->
-      <div class="row" id="states-page" hidden="true">
-        <div id="mynetwork" class="col-md-8 mynetwork"></div>
-
-        <div class="col-md-4">  
-          <div class="col-md-10">
-            <img id="states-screen" class="states-screen" src="img/electronlogo.png"> 
-          </div>
-
-          <div class="col-md-10">
-            <pre id="state-details" class="state-details" type="text"></pre>
-          </div>
-          <div class="col-md-2">
-            <div id="states-to" class="state-to-buttons" title="Exit states from the current state"></div>
-          </div>
-        </div> 
-        <div class="col-md-12">
-          <div id="states-history" class="state-to-buttons" title="State history"></div>
-        </div>
-      </div>
-
-      <!-- SCREENS -->
-      <div class="row" id="screens-page" hidden="true"> 
-        <div>Screens</div>
-      </div>
-
-      <!-- FITs -->
-      <div id="fits-page" hidden="true">
-        <div class="fits-area">
-          <table class="table table-striped fits-table">
-            <thead class="fits-table-head">
-              <tr>
-                <th></th>
-                <th title="Index for Financial Institution ID number on
-card">PIDDX</th>
-                <th title="Financial Institution ID number">PFIID</th>
-                <th title="Index for entries in the Indirect next state table">PSTDX</th>
-                <th title="Algorithm index for Diebold. Not supported as local Diebold PIN verification is not supported.">PAGDX</th>
-                <th title="Maximum number of PIN digits allowed for the
-cardholder to enter">PMXPN</th>
-                <th title="Number of digits used for local PIN check">PCKLN</th>
-                <th title="Character used to pad PIN for transmission to
-the host and the encryption method used">PINPD</th>
-                <th title="Index for location of PAN (Personal Account
-Number) on card">PANDX</th>
-                <th title="PAN data field length">PANLN</th>
-                <th title="Character used to pad PAN field for encryption">PANPD</th>
-                <th title="Index for PIN retry count field on card">PRCNT</th>
-                <th title="Index for PIN offset field on card">POFDX</th>
-                <th title="Decimalisation table used in encryption process">PDCTB</th>
-                <th title="DES‐Encrypted PIN key">PEKEY</th>
-                <th title="Track and index reference point information for all card‐related entries in FIT">PINDX</th>
-                <th title="Index for language code on card">PLNDX</th>
-                <th title="Flag to identify the location of the CIM86 sensor in the FIT. Not supported by Advance NDC">PMMSR</th>
-                <th title="Selects PIN block format for remote PIN verification">PBFMT</th>
-              </tr>
-            </thead>
-            <tbody id="fits-table-body" class="fits-table-body">
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- EMV -->
-      <div class="row" id="emv-page" hidden="true">
-        <div>EMV</div>
-      </div>
-
-      <!-- CARDS -->
-      <div id="cards-page" hidden="true">
-        <div class="list-group" id="cards-page-cards-list">
-          <div id="add-new-card-form-area" hidden="true">
-            <a href="#" class="list-group-item">
-              <form id="add-new-card-form" class="navbar-form navbar-center">
-                <div class="row">
-                  <div class="col-xs-1">
-                    <img id="new-card-scheme-logo" class="scheme-logo-lg">
-                  </div>        
-
-                  <div class="col-xs-2">
-                    <label for="cardnumber" class="control-label">Card Number</label>
-                    <input type="text" class="form-control buffer-24" id="cardnumber" name="cardnumber" value="" placeholder="0000 0000 0000 0000" required minlength="12" maxlength="19" ></input>
-                    <label id="cardnumber-error" class="error" for="cardnumber"></label>
-                  </div>
-
-                  <div class="col-xs-1">
-                    <label for="PIN" class="control-label">FIT</label>
-                    <input type="text" class="form-control buffer-6" id="FIT" value="" placeholder="FIT" maxlength="6" disabled></input>
-                    <span class="error-block"></span>
-                  </div>
-
-                  <div class="col-xs-1">
-                    <label for="PIN" class="control-label">PIN</label>
-                    <input type="text" class="form-control buffer-6" id="PIN" value="" placeholder="0000" maxlength="6"></input>
-                    <span class="error-block"></span>
-                  </div>
-
-                  <div class="col-xs-1">
-                    <label for="expiry-date" class="control-label">Expiry Date</label>
-                    <input type="text" class="form-control buffer-6" id="expiry-date" name="expiry-date" value="" placeholder="YYMM" minlength="4" maxlength="4" required></input>
-                  </div>
-
-                  <div class="col-xs-1">
-                    <label for="service-code" class="control-label">Service Code</label>
-                    <input type="text" class="form-control buffer-6" id="service-code" name="service-code" value="" placeholder="101" minlength="3" maxlength="3" required></input>
-                  </div>
-
-                  <div class="col-xs-1">
-                    <label for="pvk-index" class="control-label">PVK Index</label>
-                    <input type="text" class="form-control buffer-6" id="pvk-index" name="pvk-index" value="" placeholder="1" minlength="1" maxlength="1" required></input>
-                  </div>
-                  
-                  <div class="col-xs-1">
-                    <label for="pvv" class="control-label">PVV</label>
-                    <input type="text" class="form-control buffer-6" id="pvv" name="pvv" value="" placeholder="0000" minlength="4" maxlength="4" required></input>
-                  </div>
-                  
-                  <div class="col-xs-1">
-                    <label for="cvv" class="control-label">CVV</label>
-                    <input type="text" class="form-control buffer-6" id="cvv" name="cvv" value="" placeholder="000" minlength="3" maxlength="3" required></input>
-                  </div>
-
-                  <div class="col-xs-1">
-                    <label for="discr-data" class="control-label">Discr Data</label>
-                    <input type="text" class="form-control buffer-6" id="discr-data" value="" placeholder="" maxlength="6"></input>
-                  </div>
-
-                  <!-- <div class="col-xs-1">
-                    <label for="save-card-button" class="control-label"></label>
-                    <button class="btn btn-success" id="save-card-button" >Save</button>
-                  </div>  -->
-                </div>
-              </form>
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <!-- CASSETTES -->
-      <div id="hardware-page" hidden="true">
-        Under construction
-        <div class="row" id="cassettes-row">
-          <div class="col-xs-3 cassette-area">
-            <div class="row">
-              Cassette 1
-              <form id="cassette-1-form" class="navbar-form navbar-left" title="">
-                <div class="row">
-                  <div class="col-xs-4">
-                    <label for="loaded" class="control-label">Loaded</label>
-                    <input type="number" class="form-control buffer-5" id="loaded" name="loaded" value="" placeholder="00000"></input>
-                    <label id="loaded-error" class="error" for="loaded"></label>
-                  </div>
-
-                  <div class="col-xs-4">
-                    <label for="rejected" class="control-label">Rejected</label>
-                    <input type="number" class="form-control buffer-5" id="rejected" name="rejected" value="" placeholder="00000"></input>
-                    <label id="rejected-error" class="error" for="rejected"></label>
-                  </div>
-
-                  <div class="col-xs-4">
-                    <label for="dispensed" class="control-label">Dispensed</label>
-                    <input type="number" class="form-control buffer-5" id="dispensed" name="dispensed" value="" placeholder="00000"></input>
-                    <label id="dispensed-error" class="error" for="dispensed"></label>
-                  </div>
-                </div>
-<!--
-                <div class="row">
-                  <div class="col-xs-4">
-                    <select class="form-control" id="cassette-1-fitness">
-                      <option value="0">0 - No error</option>
-                      <option value="1">1 - Routine</option>
-                      <option value="2">2 - Warning</option>
-                      <option value="3">3 - Suspend</option>
-                      <option value="4">4 - Fatal</option>
-                    </select>
-                  </div>
-                  <div class="col-xs-4">
-                    <select class="form-control" id="cassette-1-supply">
-                      <option value="0">0 - Not configured</option>
-                      <option value="1">1 - Good state</option>
-                      <option value="2">2 - Media Low</option>
-                      <option value="3">3 - Media Out</option>
-                      <option value="4">4 - Overfill</option>
-                    </select>
-                  </div>
-                </div>
--->                
-              </form>
+                  <div id="at-coordinate-row" class="at-coordinate-row coordinates">@</div>
+                  <div id="at-screen-row" class="at-screen-row"></div>
+                  <div id="A-coordinate-row" class="A-coordinate-row coordinates">A</div>
+                  <div id="A-screen-row" class="A-screen-row"></div>
+                  <div id="B-coordinate-row" class="B-coordinate-row coordinates">B</div>
+                  <div id="B-screen-row" class="B-screen-row"></div>
+                  <div id="C-coordinate-row" class="C-coordinate-row coordinates">C</div>
+                  <div id="C-screen-row" class="C-screen-row"></div>
+                  <div id="D-coordinate-row" class="D-coordinate-row coordinates">D</div>
+                  <div id="D-screen-row" class="D-screen-row"></div>
+                  <div id="E-coordinate-row" class="E-coordinate-row coordinates">E</div>
+                  <div id="E-screen-row" class="E-screen-row"></div>
+                  <div id="F-coordinate-row" class="F-coordinate-row coordinates">F</div>
+                  <div id="F-screen-row" class="F-screen-row"></div>
+                  <div id="G-coordinate-row" class="G-coordinate-row coordinates">G</div>
+                  <div id="G-screen-row" class="G-screen-row"></div>
+                  <div id="H-coordinate-row" class="H-coordinate-row coordinates">H</div>
+                  <div id="H-screen-row" class="H-screen-row"></div>
+                  <div id="I-coordinate-row" class="I-coordinate-row coordinates">I</div>
+                  <div id="I-screen-row" class="I-screen-row"></div>
+                  <div id="J-coordinate-row" class="J-coordinate-row coordinates">J</div>
+                  <div id="J-screen-row" class="J-screen-row"></div>
+                  <div id="K-coordinate-row" class="K-coordinate-row coordinates">K</div>
+                  <div id="K-screen-row" class="K-screen-row"></div>
+                  <div id="L-coordinate-row" class="L-coordinate-row coordinates">L</div>
+                  <div id="L-screen-row" class="L-screen-row"></div>
+                  <div id="M-coordinate-row" class="M-coordinate-row coordinates">M</div>
+                  <div id="M-screen-row" class="M-screen-row"></div>
+                  <div id="N-coordinate-row" class="N-coordinate-row coordinates">N</div>
+                  <div id="N-screen-row" class="N-screen-row"></div>
+                  <div id="O-coordinate-row" class="O-coordinate-row coordinates">O</div>
+                  <div id="O-screen-row" class="O-screen-row"></div>
+               </div>
             </div>
-          </div>
-
-          <div class="col-xs-3 cassette-area">
-            <div class="row">
-              Cassette 2
-              <form id="cassette-2-form" class="navbar-form navbar-left" title="">
-                <div class="row">
-                  <div class="col-xs-4">
-                    <label for="loaded" class="control-label">Loaded</label>
-                    <input type="number" class="form-control buffer-5" id="loaded" name="loaded" value="" placeholder="00000"></input>
-                    <label id="loaded-error" class="error" for="loaded"></label>
-                  </div>
-
-                  <div class="col-xs-4">
-                    <label for="rejected" class="control-label">Rejected</label>
-                    <input type="number" class="form-control buffer-5" id="rejected" name="rejected" value="" placeholder="00000"></input>
-                    <label id="rejected-error" class="error" for="rejected"></label>
-                  </div>
-
-                  <div class="col-xs-4">
-                    <label for="dispensed" class="control-label">Dispensed</label>
-                    <input type="number" class="form-control buffer-5" id="dispensed" name="dispensed" value="" placeholder="00000"></input>
-                    <label id="dispensed-error" class="error" for="dispensed"></label>
-                  </div>
-                </div>
-<!--
-                <div class="row">
-                  <div class="col-xs-6">
-                    <select class="form-control" id="cassette-2-fitness">
-                      <option value="0">0 - No error</option>
-                      <option value="1">1 - Routine</option>
-                      <option value="2">2 - Warning</option>
-                      <option value="3">3 - Suspend</option>
-                      <option value="4">4 - Fatal</option>
-                    </select>
-                  </div>
-                  <div class="col-xs-6">
-                    <select class="form-control" id="cassette-2-supply">
-                      <option value="0">0 - Not configured</option>
-                      <option value="1">1 - Good state</option>
-                      <option value="2">2 - Media Low</option>
-                      <option value="3">3 - Media Out</option>
-                      <option value="4">4 - Overfill</option>
-                    </select>
-                  </div>
-                </div>
--->                
-              </form>
+            <div id="FDK-block-right" class="col-md-1 fdk-button-block">
+               <button id="FDK-A" type="submit" class="btn btn-lg btn-block fdk-button" disabled>A</button>
+               <button id="FDK-B" type="submit" class="btn btn-lg btn-block fdk-button" disabled>B</button>
+               <button id="FDK-C" type="submit" class="btn btn-lg btn-block fdk-button" disabled>C</button>
+               <button id="FDK-D" type="submit" class="btn btn-lg btn-block fdk-button" disabled>D</button>
             </div>
-          </div>
-
-          <div class="col-xs-3 cassette-area">
-            <div class="row">
-              Cassette 3
-              <form id="cassette-3-form" class="navbar-form navbar-left" title="">
-                <div class="row">
-                  <div class="col-xs-4">
-                    <label for="loaded" class="control-label">Loaded</label>
-                    <input type="number" class="form-control buffer-5" id="loaded" name="loaded" value="" placeholder="00000"></input>
-                    <label id="loaded-error" class="error" for="loaded"></label>
-                  </div>
-
-                  <div class="col-xs-4">
-                    <label for="rejected" class="control-label">Rejected</label>
-                    <input type="number" class="form-control buffer-5" id="rejected" name="rejected" value="" placeholder="00000"></input>
-                    <label id="rejected-error" class="error" for="rejected"></label>
-                  </div>
-
-                  <div class="col-xs-4">
-                    <label for="dispensed" class="control-label">Dispensed</label>
-                    <input type="number" class="form-control buffer-5" id="dispensed" name="dispensed" value="" placeholder="00000"></input>
-                    <label id="dispensed-error" class="error" for="dispensed"></label>
-                  </div>
-                </div>
-<!--
-                <div class="row">
-                  <div class="col-xs-6">
-                    <select class="form-control" id="cassette-3-fitness">
-                      <option value="0">0 - No error</option>
-                      <option value="1">1 - Routine</option>
-                      <option value="2">2 - Warning</option>
-                      <option value="3">3 - Suspend</option>
-                      <option value="4">4 - Fatal</option>
-                    </select>
-                  </div>
-                  <div class="col-xs-6">
-                    <select class="form-control" id="cassette-3-supply">
-                      <option value="0">0 - Not configured</option>
-                      <option value="1">1 - Good state</option>
-                      <option value="2">2 - Media Low</option>
-                      <option value="3">3 - Media Out</option>
-                      <option value="4">4 - Overfill</option>
-                    </select>
-                  </div>
-                </div>
--->                
-              </form>
+            <div class="col-md-5">
+               <pre id="log-output" class="log-output" type="text"></pre>
             </div>
-          </div>
-
-          <div class="col-xs-3 cassette-area">
-            <div class="row">
-              Cassette 4
-              <form id="cassette-4-form" class="navbar-form navbar-left" title="">
-                <div class="row">
-                  <div class="col-xs-4">
-                    <label for="loaded" class="control-label">Loaded</label>
-                    <input type="number" class="form-control buffer-5" id="loaded" name="loaded" value="" placeholder="00000"></input>
-                    <label id="loaded-error" class="error" for="loaded"></label>
-                  </div>
-
-                  <div class="col-xs-4">
-                    <label for="rejected" class="control-label">Rejected</label>
-                    <input type="number" class="form-control buffer-5" id="rejected" name="rejected" value="" placeholder="00000"></input>
-                    <label id="rejected-error" class="error" for="rejected"></label>
-                  </div>
-
-                  <div class="col-xs-4">
-                    <label for="dispensed" class="control-label">Dispensed</label>
-                    <input type="number" class="form-control buffer-5" id="dispensed" name="dispensed" value="" placeholder="00000"></input>
-                    <label id="dispensed-error" class="error" for="dispensed"></label>
-                  </div>
-                </div>
-<!--
-                <div class="row">
-                  <div class="col-xs-6">
-                    <select class="form-control" id="cassette-4-fitness">
-                      <option value="0">0 - No error</option>
-                      <option value="1">1 - Routine</option>
-                      <option value="2">2 - Warning</option>
-                      <option value="3">3 - Suspend</option>
-                      <option value="4">4 - Fatal</option>
-                    </select>
-                  </div>
-                  <div class="col-xs-6">
-                    <select class="form-control" id="cassette-4-supply">
-                      <option value="0">0 - Not configured</option>
-                      <option value="1">1 - Good state</option>
-                      <option value="2">2 - Media Low</option>
-                      <option value="3">3 - Media Out</option>
-                      <option value="4">4 - Overfill</option>
-                    </select>
-                  </div>
-                </div>
--->          
-              </form>
+            <div id="receipt" title="Receipt">
+			   <div id="receipt-data">
+			   </div>
+			</div>
+         </div>
+         <!-- STATES -->
+         <div class="row" id="states-page" hidden="true">
+            <div id="mynetwork" class="col-md-8 mynetwork"></div>
+            <div class="col-md-4">
+               <div class="col-md-10">
+                  <img id="states-screen" class="states-screen" src="img/electronlogo.png"> 
+               </div>
+               <div class="col-md-10">
+                  <pre id="state-details" class="state-details" type="text"></pre>
+               </div>
+               <div class="col-md-2">
+                  <div id="states-to" class="state-to-buttons" title="Exit states from the current state"></div>
+               </div>
             </div>
-          </div>
-        </div>       
+            <div class="col-md-12">
+               <div id="states-history" class="state-to-buttons" title="State history"></div>
+            </div>
+         </div>
+         <!-- SCREENS -->
+         <div class="row" id="screens-page" hidden="true">
+            <div>Screens</div>
+         </div>
+         <!-- FITs -->
+         <div id="fits-page" hidden="true">
+            <div class="fits-area">
+               <table class="table table-striped fits-table">
+                  <thead class="fits-table-head">
+                     <tr>
+                        <th></th>
+                        <th title="Index for Financial Institution ID number on
+                           card">PIDDX</th>
+                        <th title="Financial Institution ID number">PFIID</th>
+                        <th title="Index for entries in the Indirect next state table">PSTDX</th>
+                        <th title="Algorithm index for Diebold. Not supported as local Diebold PIN verification is not supported.">PAGDX</th>
+                        <th title="Maximum number of PIN digits allowed for the
+                           cardholder to enter">PMXPN</th>
+                        <th title="Number of digits used for local PIN check">PCKLN</th>
+                        <th title="Character used to pad PIN for transmission to
+                           the host and the encryption method used">PINPD</th>
+                        <th title="Index for location of PAN (Personal Account
+                           Number) on card">PANDX</th>
+                        <th title="PAN data field length">PANLN</th>
+                        <th title="Character used to pad PAN field for encryption">PANPD</th>
+                        <th title="Index for PIN retry count field on card">PRCNT</th>
+                        <th title="Index for PIN offset field on card">POFDX</th>
+                        <th title="Decimalisation table used in encryption process">PDCTB</th>
+                        <th title="DES‐Encrypted PIN key">PEKEY</th>
+                        <th title="Track and index reference point information for all card‐related entries in FIT">PINDX</th>
+                        <th title="Index for language code on card">PLNDX</th>
+                        <th title="Flag to identify the location of the CIM86 sensor in the FIT. Not supported by Advance NDC">PMMSR</th>
+                        <th title="Selects PIN block format for remote PIN verification">PBFMT</th>
+                     </tr>
+                  </thead>
+                  <tbody id="fits-table-body" class="fits-table-body">
+                  </tbody>
+               </table>
+            </div>
+         </div>
+         <!-- EMV -->
+         <div class="row" id="emv-page" hidden="true">
+            <div>EMV</div>
+         </div>
+         <!-- CARDS -->
+         <div id="cards-page" hidden="true">
+            <div class="list-group" id="cards-page-cards-list">
+               <div id="add-new-card-form-area" hidden="true">
+                  <a href="#" class="list-group-item">
+                     <form id="add-new-card-form" class="navbar-form navbar-center">
+                        <div class="row">
+                           <div class="col-xs-1">
+                              <img id="new-card-scheme-logo" class="scheme-logo-lg">
+                           </div>
+                           <div class="col-xs-2">
+                              <label for="cardnumber" class="control-label">Card Number</label>
+                              <input type="text" class="form-control buffer-24" id="cardnumber" name="cardnumber" value="" placeholder="0000 0000 0000 0000" required minlength="13" maxlength="19" ></input>
+                              <label id="cardnumber-error" class="error" for="cardnumber"></label>
+                           </div>
+                           <div class="col-xs-1">
+                              <label for="PIN" class="control-label">FIT</label>
+                              <input type="text" class="form-control buffer-6" id="FIT" value="" placeholder="FIT" maxlength="6" disabled></input>
+                              <span class="error-block"></span>
+                           </div>
+                           <div class="col-xs-1">
+                              <label for="PIN" class="control-label">PIN</label>
+                              <input type="text" class="form-control buffer-6" id="PIN" value="" placeholder="0000" maxlength="6"></input>
+                              <span class="error-block"></span>
+                           </div>
+                           <div class="col-xs-1">
+                              <label for="expiry-date" class="control-label">Expiry Date</label>
+                              <input type="text" class="form-control buffer-6" id="expiry-date" name="expiry-date" value="" placeholder="YYMM" minlength="4" maxlength="4" required></input>
+                           </div>
+                           <div class="col-xs-1">
+                              <label for="service-code" class="control-label">Service Code</label>
+                              <input type="text" class="form-control buffer-6" id="service-code" name="service-code" value="" placeholder="101" minlength="3" maxlength="3" required></input>
+                           </div>
+                           <div class="col-xs-1">
+                              <label for="pvk-index" class="control-label">PVK Index</label>
+                              <input type="text" class="form-control buffer-6" id="pvk-index" name="pvk-index" value="" placeholder="1" minlength="1" maxlength="1" required></input>
+                           </div>
+                           <div class="col-xs-1">
+                              <label for="pvv" class="control-label">PVV</label>
+                              <input type="text" class="form-control buffer-6" id="pvv" name="pvv" value="" placeholder="0000" minlength="4" maxlength="4" required></input>
+                           </div>
+                           <div class="col-xs-1">
+                              <label for="cvv" class="control-label">CVV</label>
+                              <input type="text" class="form-control buffer-6" id="cvv" name="cvv" value="" placeholder="000" minlength="3" maxlength="3" required></input>
+                           </div>
+                           <div class="col-xs-1">
+                              <label for="discr-data" class="control-label">Discr Data</label>
+                              <input type="text" class="form-control buffer-6" id="discr-data" value="" placeholder="" maxlength="6"></input>
+                           </div>
+                           <!-- <div class="col-xs-1">
+                              <label for="save-card-button" class="control-label"></label>
+                              <button class="btn btn-success" id="save-card-button" >Save</button>
+                              </div>  -->
+                        </div>
+                     </form>
+                  </a>
+               </div>
+            </div>
+         </div>
+         <!-- CASSETTES -->
+         <div id="hardware-page" hidden="true">
+            Under construction
+            <div class="row" id="cassettes-row">
+               <div class="col-xs-3 cassette-area">
+                  <div class="row">
+                     Cassette 1
+                     <form id="cassette-1-form" class="navbar-form navbar-left" title="">
+                        <div class="row">
+                           <div class="col-xs-4">
+                              <label for="loaded" class="control-label">Loaded</label>
+                              <input type="number" class="form-control buffer-5" id="loaded" name="loaded" value="" placeholder="00000"></input>
+                              <label id="loaded-error" class="error" for="loaded"></label>
+                           </div>
+                           <div class="col-xs-4">
+                              <label for="rejected" class="control-label">Rejected</label>
+                              <input type="number" class="form-control buffer-5" id="rejected" name="rejected" value="" placeholder="00000"></input>
+                              <label id="rejected-error" class="error" for="rejected"></label>
+                           </div>
+                           <div class="col-xs-4">
+                              <label for="dispensed" class="control-label">Dispensed</label>
+                              <input type="number" class="form-control buffer-5" id="dispensed" name="dispensed" value="" placeholder="00000"></input>
+                              <label id="dispensed-error" class="error" for="dispensed"></label>
+                           </div>
+                        </div>
+                        <!--
+                           <div class="row">
+                             <div class="col-xs-4">
+                               <select class="form-control" id="cassette-1-fitness">
+                                 <option value="0">0 - No error</option>
+                                 <option value="1">1 - Routine</option>
+                                 <option value="2">2 - Warning</option>
+                                 <option value="3">3 - Suspend</option>
+                                 <option value="4">4 - Fatal</option>
+                               </select>
+                             </div>
+                             <div class="col-xs-4">
+                               <select class="form-control" id="cassette-1-supply">
+                                 <option value="0">0 - Not configured</option>
+                                 <option value="1">1 - Good state</option>
+                                 <option value="2">2 - Media Low</option>
+                                 <option value="3">3 - Media Out</option>
+                                 <option value="4">4 - Overfill</option>
+                               </select>
+                             </div>
+                           </div>
+                           -->                
+                     </form>
+                  </div>
+               </div>
+               <div class="col-xs-3 cassette-area">
+                  <div class="row">
+                     Cassette 2
+                     <form id="cassette-2-form" class="navbar-form navbar-left" title="">
+                        <div class="row">
+                           <div class="col-xs-4">
+                              <label for="loaded" class="control-label">Loaded</label>
+                              <input type="number" class="form-control buffer-5" id="loaded" name="loaded" value="" placeholder="00000"></input>
+                              <label id="loaded-error" class="error" for="loaded"></label>
+                           </div>
+                           <div class="col-xs-4">
+                              <label for="rejected" class="control-label">Rejected</label>
+                              <input type="number" class="form-control buffer-5" id="rejected" name="rejected" value="" placeholder="00000"></input>
+                              <label id="rejected-error" class="error" for="rejected"></label>
+                           </div>
+                           <div class="col-xs-4">
+                              <label for="dispensed" class="control-label">Dispensed</label>
+                              <input type="number" class="form-control buffer-5" id="dispensed" name="dispensed" value="" placeholder="00000"></input>
+                              <label id="dispensed-error" class="error" for="dispensed"></label>
+                           </div>
+                        </div>
+                        <!--
+                           <div class="row">
+                             <div class="col-xs-6">
+                               <select class="form-control" id="cassette-2-fitness">
+                                 <option value="0">0 - No error</option>
+                                 <option value="1">1 - Routine</option>
+                                 <option value="2">2 - Warning</option>
+                                 <option value="3">3 - Suspend</option>
+                                 <option value="4">4 - Fatal</option>
+                               </select>
+                             </div>
+                             <div class="col-xs-6">
+                               <select class="form-control" id="cassette-2-supply">
+                                 <option value="0">0 - Not configured</option>
+                                 <option value="1">1 - Good state</option>
+                                 <option value="2">2 - Media Low</option>
+                                 <option value="3">3 - Media Out</option>
+                                 <option value="4">4 - Overfill</option>
+                               </select>
+                             </div>
+                           </div>
+                           -->                
+                     </form>
+                  </div>
+               </div>
+               <div class="col-xs-3 cassette-area">
+                  <div class="row">
+                     Cassette 3
+                     <form id="cassette-3-form" class="navbar-form navbar-left" title="">
+                        <div class="row">
+                           <div class="col-xs-4">
+                              <label for="loaded" class="control-label">Loaded</label>
+                              <input type="number" class="form-control buffer-5" id="loaded" name="loaded" value="" placeholder="00000"></input>
+                              <label id="loaded-error" class="error" for="loaded"></label>
+                           </div>
+                           <div class="col-xs-4">
+                              <label for="rejected" class="control-label">Rejected</label>
+                              <input type="number" class="form-control buffer-5" id="rejected" name="rejected" value="" placeholder="00000"></input>
+                              <label id="rejected-error" class="error" for="rejected"></label>
+                           </div>
+                           <div class="col-xs-4">
+                              <label for="dispensed" class="control-label">Dispensed</label>
+                              <input type="number" class="form-control buffer-5" id="dispensed" name="dispensed" value="" placeholder="00000"></input>
+                              <label id="dispensed-error" class="error" for="dispensed"></label>
+                           </div>
+                        </div>
+                        <!--
+                           <div class="row">
+                             <div class="col-xs-6">
+                               <select class="form-control" id="cassette-3-fitness">
+                                 <option value="0">0 - No error</option>
+                                 <option value="1">1 - Routine</option>
+                                 <option value="2">2 - Warning</option>
+                                 <option value="3">3 - Suspend</option>
+                                 <option value="4">4 - Fatal</option>
+                               </select>
+                             </div>
+                             <div class="col-xs-6">
+                               <select class="form-control" id="cassette-3-supply">
+                                 <option value="0">0 - Not configured</option>
+                                 <option value="1">1 - Good state</option>
+                                 <option value="2">2 - Media Low</option>
+                                 <option value="3">3 - Media Out</option>
+                                 <option value="4">4 - Overfill</option>
+                               </select>
+                             </div>
+                           </div>
+                           -->                
+                     </form>
+                  </div>
+               </div>
+               <div class="col-xs-3 cassette-area">
+                  <div class="row">
+                     Cassette 4
+                     <form id="cassette-4-form" class="navbar-form navbar-left" title="">
+                        <div class="row">
+                           <div class="col-xs-4">
+                              <label for="loaded" class="control-label">Loaded</label>
+                              <input type="number" class="form-control buffer-5" id="loaded" name="loaded" value="" placeholder="00000"></input>
+                              <label id="loaded-error" class="error" for="loaded"></label>
+                           </div>
+                           <div class="col-xs-4">
+                              <label for="rejected" class="control-label">Rejected</label>
+                              <input type="number" class="form-control buffer-5" id="rejected" name="rejected" value="" placeholder="00000"></input>
+                              <label id="rejected-error" class="error" for="rejected"></label>
+                           </div>
+                           <div class="col-xs-4">
+                              <label for="dispensed" class="control-label">Dispensed</label>
+                              <input type="number" class="form-control buffer-5" id="dispensed" name="dispensed" value="" placeholder="00000"></input>
+                              <label id="dispensed-error" class="error" for="dispensed"></label>
+                           </div>
+                        </div>
+                        <!--
+                           <div class="row">
+                             <div class="col-xs-6">
+                               <select class="form-control" id="cassette-4-fitness">
+                                 <option value="0">0 - No error</option>
+                                 <option value="1">1 - Routine</option>
+                                 <option value="2">2 - Warning</option>
+                                 <option value="3">3 - Suspend</option>
+                                 <option value="4">4 - Fatal</option>
+                               </select>
+                             </div>
+                             <div class="col-xs-6">
+                               <select class="form-control" id="cassette-4-supply">
+                                 <option value="0">0 - Not configured</option>
+                                 <option value="1">1 - Good state</option>
+                                 <option value="2">2 - Media Low</option>
+                                 <option value="3">3 - Media Out</option>
+                                 <option value="4">4 - Overfill</option>
+                               </select>
+                             </div>
+                           </div>
+                           -->          
+                     </form>
+                  </div>
+               </div>
+            </div>
+         </div>
       </div>
-
-      <nav class="navbar navbar-default" id="atm-bottom-navbar" hidden="true">
-        <div class="container-fluid">
-          <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <form id="card-read-form" class="navbar-form navbar-left" title="">
-              <div class="form-group">
-                <select class="form-control" id="atm-page-cards-list">
-                </select>
-              </div> 
-              <button type="submit" class="btn btn-default" id="card-inserted">Read Card</button>
-              <button type="submit" class="btn btn-success" id="atm-no-cards-add-card">Create Card</button>
-            </form>
-      
-            <form id="keys-form buffers" class="navbar-form navbar-right keys-form ">
-              <div class="form-group">
-                <input type="text" class="form-control buffer-32" id="master-key" value="" placeholder="Master Key" title="Master Key Clear Value" disabled></input>
-                <input type="text" class="form-control buffer-6" id="master-key-cv" value="" placeholder="KCV" title="Master Key Check Value" disabled></input>
-                <input type="text" class="form-control buffer-32" id="pin-key" value="" placeholder="Communications Key Clear Value" title="Communications Key" disabled></input>
-                <input type="text" class="form-control buffer-6" id="pin-key-cv" value="" placeholder="KCV" title="Communications Key Check Value" disabled></input>
-              </div>
-            </form>
-
-          </div><!-- /.navbar-collapse -->
-        </div><!-- /.container-fluid -->
-      </nav>
-    </div>
-
-    <script src="./src/listeners/network.js" charset="utf-8"></script>
-    <script src="./src/listeners/states.js" charset="utf-8"></script>
-    <script src="./src/listeners/parser.js" charset="utf-8"></script>
-    <script src="./src/listeners/atm.js" charset="utf-8"></script>
-    <script src="./src/listeners/builder.js" charset="utf-8"></script>
-    <script src="./src/listeners/fits.js" charset="utf-8"></script>
-    <script src="./src/listeners/cards.js" charset="utf-8"></script>
-    <script src="./src/listeners/settings.js" charset="utf-8"></script>
-    <script src="./src/listeners/version.js" charset="utf-8"></script>
-    <script src="node_modules/mousetrap/mousetrap.min.js" charset="utf-8"></script>
-    <!--<script>window.$ = window.jQuery = nodeRequire('node_modules/jquery/dist/jquery.js');</script>-->
-    <script src="./src/listeners/window.js" charset="utf-8"></script>
-  </body>
-
-  <div id="app-version"></div>
-
-  <footer class="footer navbar-fixed-bottom" id="footer">
-  </footer>
+      <script src="./src/listeners/network.js" charset="utf-8"></script>
+      <script src="./src/listeners/states.js" charset="utf-8"></script>
+      <script src="./src/listeners/parser.js" charset="utf-8"></script>
+      <script src="./src/listeners/atm.js" charset="utf-8"></script>
+      <script src="./src/listeners/builder.js" charset="utf-8"></script>
+      <script src="./src/listeners/fits.js" charset="utf-8"></script>
+      <script src="./src/listeners/cards.js" charset="utf-8"></script>
+      <script src="./src/listeners/settings.js" charset="utf-8"></script>
+      <script src="./src/listeners/version.js" charset="utf-8"></script>
+      <script src="node_modules/mousetrap/mousetrap.min.js" charset="utf-8"></script>
+      <!--<script>window.$ = window.jQuery = nodeRequire('node_modules/jquery/dist/jquery.js');</script>-->
+      <script src="./src/listeners/window.js" charset="utf-8"></script>
+   </body>
+   <div id="app-version"></div>
+   <footer class="footer navbar-fixed-bottom" id="footer">
+   </footer>
 </html>

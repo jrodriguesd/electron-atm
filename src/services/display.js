@@ -17,7 +17,8 @@ class DisplayService {
   setScreen(screen){
     this.current_screen = screen;
 
-    //log.info(this.trace.object(screen));
+    log.info(this.trace.object(screen));
+	this.image_file = 'electronlogo.png'; // Restaurar la Imagen por Definicion JFRD
     this.current_screen.actions.forEach((element) => {
       if(element === 'clear_screen'){
         this.text.init();        
@@ -79,13 +80,15 @@ class DisplayService {
    * @param  {[type]}      [description]
    * @return {[type]}      [description]
    */
-  insertText(text, masking_symbol){
+  insertText(text, masking_symbol)
+  {
     if(masking_symbol)
       text = text.replace(/./gi, masking_symbol);
 
-    this.text.init();
+    // this.text.init();
     this.text.put(text);
   }
+
 }
 
 module.exports = DisplayService;

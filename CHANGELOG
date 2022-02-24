@@ -1,3 +1,14 @@
+February 2022
+	1.4.3 Electron 5.0.13
+	      Add Support to Images in the Screen
+	      Add Support to Receipt
+		  correct problem in npm build main.js
+		  Support Enhanced Configuration load
+		  Support MultiLanguage screens
+		  Change track2 Format
+		  Send Initial Power Failure Message to Host
+		  Support Dynamic Key Exchange
+
 February 2018
   1.4.3 protocol-dependent header message support
 
@@ -138,3 +149,6 @@ July 2017
   	0.1.2 Fixed failing test cases caused by missing jquery reference
   	0.1.1 nodeRequire() -> require() 
   	0.1.0 App licence changed to LGPLv2 
+		  
+		  
+		  

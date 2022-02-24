@@ -30,6 +30,7 @@ class ATM {
     this.buttons_pressed = [];
     this.activeFDKs = [];
     this.transaction_request = null;
+	this.basescreen = 0;
   }
 
   getBuffer(type){
@@ -107,7 +108,7 @@ class ATM {
     case 'Send Configuration Information':
       reply.config_id = this.getConfigID();
       reply.hardware_fitness = this.hardware.getHardwareFitness();
-      reply.hardware_configuration = '157F000901020483000001B1000000010202047F7F00';
+      reply.hardware_configuration = '157F000901020483001B100000010202047F7F';
       reply.supplies_status = this.hardware.getSuppliesStatus();
       reply.sensor_status = '000000000000';
       reply.release_number = this.hardware.getReleaseNumber();
@@ -230,6 +231,12 @@ class ATM {
         return this.replySolicitedStatus('Command Reject');
       }
 
+    case 'Enhanced Configuration load':
+	  var host = settings.get('host');
+	  host.luno = data.LUNO;
+      settings.set('host', host);
+      return this.replySolicitedStatus('Ready');
+
     default:
       this.log.error('ATM.processDataCommand(): unknown message identifier: ', data.message_identifier);
       return this.replySolicitedStatus('Command Reject');
@@ -248,7 +255,9 @@ class ATM {
       this.setFDKsActiveMask(data.active_keys);
     }
     
+    this.log.info('JFRD controllers\\atm.js  processInteractiveTransactionResponse(data) 251');
     this.display.setScreen(this.screens.parseDynamicScreenData(data.screen_data_field));
+    this.log.info('JFRD controllers\\atm.js  processInteractiveTransactionResponse(data) 253');
     return this.replySolicitedStatus('Ready');
   }
 
@@ -295,11 +304,29 @@ class ATM {
    * @param  {[type]} data [description]
    * @return {[type]}      [description]
    */
-  processTransactionReply(data){    
-    this.processState(data.next_state);
+  processTransactionReply(data){
+    this.log.info('JFRD controllers\\atm.js  processTransactionReply(data) 308 >' + data.message_coordination_number + '<' );
+    this.log.info('JFRD controllers\\atm.js  processTransactionReply(data) 309 >' + this.settings.get('message_coordination_number') + '<' );
+	
+	if (data.message_coordination_number != this.settings.get('message_coordination_number'))
+      return this.replySolicitedStatus('Command Reject');
 
     if(data.screen_display_update)
-      this.screens.parseScreenDisplayUpdate(data.screen_display_update);
+	{
+      this.screens.parseScreenDisplayUpdate( data.screen_display_update );
+	}
+
+    if(data.receipt_printer_data)
+	{
+        this.log.info('JFRD controllers\\atm.js  processTransactionReply(data) 321');
+		let printer_data = '<pre>' + data.receipt_printer_data + '</pre>';
+        $("#receipt-data").replaceWith(printer_data);
+        $("#receipt").dialog("open");
+	}
+
+    this.processState(data.next_state);
+
+    this.log.info('JFRD controllers\\atm.js  processTransactionReply(data) 327');
 
     return this.replySolicitedStatus('Ready');
   }
@@ -325,7 +352,8 @@ class ATM {
    *  message.]
    * @return {[type]} [description]
    */
-  getMessageCoordinationNumber(){
+  getMessageCoordinationNumber()
+  {
     let saved = this.settings.get('message_coordination_number');
     if(!saved)
       saved = '0';
@@ -363,13 +391,27 @@ class ATM {
   }
 
   /**
+   * [ getScreenNumber description]
+   * @param  {[type]} state [description]
+   * @return {[type]}       [description]
+   */
+  getScreenNumber(screen_number) 
+  {
+	var num = this.basescreen + parseInt(screen_number);
+	var size = 3;
+    num = num.toString();
+    while (num.length < size) num = "0" + num;
+    return num;
+  }
+
+  /**
    * [processStateA process the Card Read state]
    * @param  {[type]} state [description]
    * @return {[type]}       [description]
    */
   processStateA(state){
     this.initBuffers();
-    this.display.setScreenByNumber(state.get('screen_number'));
+    this.display.setScreenByNumber(this.getScreenNumber( state.get('screen_number') ));
     
     if(this.card)
       return state.get('good_read_next_state');
@@ -389,7 +431,9 @@ class ATM {
      * to the left of the CRT is set) or the Enter key after the last digit has
      * been entered. Pressing the Clear key clears all digits.
      */
-    this.display.setScreenByNumber(state.get('screen_number'));
+
+    this.display.setScreenByNumber(this.getScreenNumber( state.get('screen_number') ));
+    // this.display.setScreenByNumber(this.getScreenNumber(state));
     this.setFDKsActiveMask('001'); // Enabling button 'A' only
 
     if(this.PIN_buffer.length > 3){
@@ -404,7 +448,8 @@ class ATM {
    * @return {[type]}       [description]
    */
   processAmountEntryState(state){
-    this.display.setScreenByNumber(state.get('screen_number'));
+    this.display.setScreenByNumber(this.getScreenNumber( state.get('screen_number') ));
+    // this.display.setScreenByNumber(this.getScreenNumber(state));
     this.setFDKsActiveMask('015'); // Enabling 'A', 'B', 'C', 'D' buttons
     this.amount_buffer = '000000000000';
 
@@ -421,7 +466,14 @@ class ATM {
    */
   processStateD(state, extension_state){
     //this.setBufferFromState(state, extension_state);
+    this.log.info('JFRD controller\\Atm.js 432 state Y >>' + state.get('clear_mask') + '<<');
+    this.log.info(this.trace.object(this.opcode.buffer));
+	
     this.opcode.setBufferFromState(state, extension_state);
+
+    this.log.info('JFRD controller\\Atm.js 435 state Y <<<<<<<');
+    this.log.info(this.trace.object(this.opcode.buffer));
+
     return state.get('next_state');
   }
 
@@ -431,7 +483,8 @@ class ATM {
    * @return {[type]}       [description]
    */
   processFourFDKSelectionState(state){
-    this.display.setScreenByNumber(state.get('screen_number'));
+    this.display.setScreenByNumber(this.getScreenNumber( state.get('screen_number') ));
+    // this.display.setScreenByNumber(this.getScreenNumber(state));
 
     this.activeFDKs = [];
     ['A', 'B', 'C', 'D'].forEach((element, index) => {
@@ -452,7 +505,8 @@ class ATM {
   }
 
   processInformationEntryState(state){
-    this.display.setScreenByNumber(state.get('screen_number'));
+    this.display.setScreenByNumber(this.getScreenNumber( state.get('screen_number') ));
+    // this.display.setScreenByNumber(this.getScreenNumber(state));
     let active_mask = '0';
     [ state.get('FDK_A_next_state'),
       state.get('FDK_B_next_state'),
@@ -506,11 +560,13 @@ class ATM {
    * @return {[type]}       [description]
    */
   processTransactionRequestState(state){
-    this.display.setScreenByNumber(state.get('screen_number'));
+    this.display.setScreenByNumber(this.getScreenNumber( state.get('screen_number') ));
+    // this.display.setScreenByNumber(this.getScreenNumber(state));
 
     let request = {
       message_class: 'Unsolicited',
       message_subclass: 'Transaction Request',
+	  time_variant_number: '01A2E166',
       top_of_receipt: '1',
       message_coordination_number: this.getMessageCoordinationNumber(),
     };
@@ -573,8 +629,10 @@ class ATM {
    * @param  {[type]} state [description]
    * @return {[type]}       [description]
    */
-  processCloseState(state){
-    this.display.setScreenByNumber(state.get('receipt_delivered_screen'));
+  processCloseState(state)
+  {
+    this.display.setScreenByNumber(this.getScreenNumber( state.get('receipt_delivered_screen') ));
+    //this.display.setScreenByNumber(state.get('receipt_delivered_screen'));
     this.setFDKsActiveMask('000');  // Disable all FDK buttons
     this.card = null;
     this.log.info(this.trace.object(state));
@@ -621,7 +679,8 @@ class ATM {
    * @return {[type]}       [description]
    */
   processStateX(state, extension_state){
-    this.display.setScreenByNumber(state.get('screen_number'));
+    this.display.setScreenByNumber(this.getScreenNumber( state.get('screen_number') ));
+    // this.display.setScreenByNumber(this.getScreenNumber(state));
     this.setFDKsActiveMask(state.get('FDK_active_mask'));
 
     let button = this.buttons_pressed.shift();
@@ -679,28 +738,103 @@ class ATM {
   }
 
   /**
+   * [getFDKIndex description]
+   * @param  {[type]} fdk   [description]
+   * @return {[type]}       [description]
+   */
+  getFDKIndex(fdk)
+  {
+    this.log.info('JFRD controller\\Atm.js 729 >' + fdk + '<');
+    switch(fdk)
+	{
+      case 'A':
+        return 2;
+      case 'B':
+        return 3;
+      case 'C':
+        return 4;
+      case 'D':
+        return 5;
+      case 'F':
+        return 6;
+      case 'G':
+        return 7;
+      case 'H':
+        return 9;
+      case 'I':
+        return 9;
+      default:
+        return -1;
+    }
+  }
+
+  /**
    * [processStateY description]
    * @param  {[type]} state [description]
    * @return {[type]}       [description]
    */
   processStateY(state, extension_state){
-    this.display.setScreenByNumber(state.get('screen_number'));
+    this.display.setScreenByNumber(this.getScreenNumber( state.get('screen_number') ));
+    // this.display.setScreenByNumber(this.getScreenNumber(state));
     this.setFDKsActiveMask(state.get('FDK_active_mask'));
 
-    if(extension_state){
+    this.log.info('JFRD controller\\Atm.js 773 ' + this.trace.object(extension_state));
+    this.log.info('JFRD controller\\Atm.js 774 ' + this.trace.object(state));
+    this.log.info('JFRD controller\\Atm.js 775 ' + state.get('multi_language_screens'));
+
+    if(extension_state)
+	{
       this.log.error('Extension state on state Y is not yet supported');
-    }else{
+    }
+	// else
+	{
+      this.log.info('JFRD controller\\Atm.js 783 state Y <<<<<<<');
+
       let button = this.buttons_pressed.shift();
-      if(this.isFDKButtonActive(button)){
+      this.log.info('JFRD controller\\Atm.js 766 ' + this.trace.object(button));
+
+	  let mls = state.get('multi_language_screens');
+	  if ( !((mls === '255') || (mls === '000')) )
+	  // if (mls !== '255') // JFRD 30-Jun-2021
+	  {
+	      let mlsState = this.states.get(mls);
+          this.log.info('JFRD controller\\Atm.js 792 ' + this.trace.object(mlsState));
+		  var entries = mlsState.get('entries');
+          this.log.info('JFRD controller\\Atm.js 794 ' + this.trace.object(entries));
+		  // Actualizar this.basescreen
+		  this.basescreen = parseInt( entries[ this.getFDKIndex(button) ] );
+	  }
+
+      this.log.info('JFRD controller\\Atm.js 811 state Y <<<<<<<');
+
+
+      if(this.isFDKButtonActive(button))
+	  {
+        this.log.info('JFRD controller\\Atm.js 813 state Y <<<<<<<');
         this.FDK_buffer = button;
+        this.log.info(this.trace.object(this.opcode.buffer));
+        this.log.info('JFRD controller\\Atm.js 815 state Y <<<<<<<');
+        this.log.info(this.trace.object(state));
 
         // If there is no extension state, state.get('buffer_positions') defines the Operation Code buffer position 
         // to be edited by a value in the range 000 to 007.
-        this.opcode.setBufferValueAt(parseInt(state.get('buffer_positions'), 10), button);
+        // if(extension_state)
+		// {
+		//   for(let i = 0; i < 3; i++)
+		//   {
+        //     this.log.info('JFRD controller\\Atm.js 825 state Y <<<<<<<' + state.get('buffer_positions') );
+        //     this.opcode.setBufferValueAt(parseInt(state.get('buffer_positions').charAt(i), 10), button);
+		//   }
+		// }
+		// else
+            this.opcode.setBufferValueAt(parseInt(state.get('buffer_positions'), 10), button);
        
+        this.log.info(this.trace.object(this.opcode.buffer));
+        this.log.info('JFRD controller\\Atm.js 831 state Y <<<<<<<');
         return state.get('FDK_next_state');
       }
     }
+    this.log.info('JFRD 816 state Y <<<<<<<');
   }
 
   /**
@@ -719,7 +853,8 @@ class ATM {
    */
   processStateCompleteICCAppInit(state){
     let extension_state = this.states.get(state.get('extension_state'));
-    this.display.setScreenByNumber(state.get('please_wait_screen_number'));
+    this.display.setScreenByNumber(this.getScreenNumber( state.get('please_wait_screen_number') ));
+    // this.display.setScreenByNumber(state.get('please_wait_screen_number'));
 
     return extension_state.get('entries')[8]; // Processing not performed
   }
@@ -773,6 +908,9 @@ class ATM {
         break;
 
       case 'D':
+        this.log.info('JFRD controller\\Atm.js 802 state Y >>');
+		this.log.info( this.trace.object( state ) );
+
         state.get('extension_state') !== '255' ? next_state = this.processStateD(state, this.states.get(state.get('extension_state'))) : next_state = this.processStateD(state);
         break;
 
@@ -783,6 +921,16 @@ class ATM {
       case 'F':
         next_state = this.processAmountEntryState(state);
         break;
+
+      /*
+      case 'G':
+	    // G - Amount Check State Page 111/914
+	    // Como el del Estado D
+        this.log.info('JFRD controller\atm.js line 790 Estado G');
+		next_state =  state.get('next_state')
+        this.log.info('JFRD Processing state ' + state.get('number') + state.get('type') + ' (' + state.get('description') + ')');
+        break;
+      */
 
       case 'H':
         next_state = this.processInformationEntryState(state);
@@ -828,6 +976,10 @@ class ATM {
         next_state = this.processSetICCDataState(state);
         break;
 
+      case '-': // JFRD 29-Jun-2021
+        next_state = this.processSetICCDataState(state);
+        break;
+
       default:
         this.log.error('atm.processState(): unsupported state type ' + state.get('type'));
         next_state = null;
@@ -837,6 +989,8 @@ class ATM {
         state = this.states.get(next_state);
       else
         break;
+
+      this.log.info('JFRD controller\\Atm.js 971 ' + this.trace.object(state));
 
     }while(state);
 
@@ -864,7 +1018,8 @@ class ATM {
   }
 
   readCard(cardnumber, track2_data){
-    this.track2 = cardnumber + '=' + track2_data;
+	// JFRD 02-Jun-2021
+    this.track2 = ';' + cardnumber + '=' + track2_data + '?';
     this.card = this.parseTrack2(this.track2);
     if(this.card){
       this.log.info('Card ' + this.card.number + ' read');
@@ -903,23 +1058,36 @@ class ATM {
    * [setConfigID description]
    * @param {[type]} config_id [description]
    */
-  setConfigID(config_id){
+  setConfigID(config_id)
+  {
     this.config_id = config_id;
     this.settings.set('config_id', config_id);
   }
 
-  getConfigID(){
+  getConfigID()
+  {
     return this.config_id;
   }
 
-  setStatus(status){
+  setStatus(status)
+  {
     this.status = status;
 
-    switch(status){
-    case 'Offline':
-    case 'Out-Of-Service':
-      this.display.setScreenByNumber('001');
-      break;
+    switch(status)
+	{
+        case 'Connected':
+          let request = {
+            message_class: 'Unsolicited',
+            message_subclass: 'Power Failure',
+	        time_variant_number: '01A2E166',
+          };
+		  request.config_id = this.getConfigID();
+          this.transaction_request = request;
+          break;
+        case 'Offline':
+        case 'Out-Of-Service':
+          this.display.setScreenByNumber('001');
+          break;
     }
   }
 
@@ -929,14 +1097,18 @@ class ATM {
    * @return {[type]}      [description]
    */
   processHostMessage(data){
+    this.log.info('JFRD controllers\\atm.js  processHostMessage(data) 969');
     switch(data.message_class){
     case 'Terminal Command':
+      this.log.info('JFRD controllers\\atm.js  processHostMessage(data) 972');
       return this.processTerminalCommand(data);
 
     case 'Data Command':
+      this.log.info('JFRD controllers\\atm.js  processHostMessage(data) 976');
       return this.processDataCommand(data);
 
     case 'Transaction Reply Command':
+      this.log.info('JFRD controllers\\atm.js  processHostMessage(data) 980');
       return this.processTransactionReply(data);
             
     case 'EMV Configuration':

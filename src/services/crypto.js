@@ -55,7 +55,9 @@ class CryptoService {
    * [getTerminalKey description]
    * @return {[type]} [description]
    */
-  getTerminalKey(){
+  getTerminalKey()
+  {
+	this.keys.pin_key.key = settings.get('pin_key')
     return [this.keys.pin_key.key, this.getKeyCheckValue(this.keys.pin_key.key)];
   }
 
@@ -64,18 +66,22 @@ class CryptoService {
    * [getMasterKey description]
    * @return {[type]} [description]
    */
-  getMasterKey(){
+  getMasterKey()
+  {
+	this.keys.master_key.key = settings.get('master_key')
     return [this.keys.master_key.key, this.getKeyCheckValue(this.keys.master_key.key)] ;
   }
 
-  getKey(type){
-    switch(type){
-    case 'master':
-      return this.getMasterKey();
-
-    case 'comms':
-    case 'pin':
-      return this.getTerminalKey();
+  getKey(type)
+  {
+    switch(type)
+	{
+      case 'master':
+        return this.getMasterKey();
+	  
+      case 'comms':
+      case 'pin':
+        return this.getTerminalKey();
     }
   }
   
@@ -109,6 +115,7 @@ class CryptoService {
     }
 
     this.log.info('New comms key received: ' + comms_key);
+	this.keys.master_key.key = settings.get('master_key');
     if(!this.keys.master_key.key){
       this.log.error('Invalid master key: ' + this.keys.master_key.key);
       return false;
@@ -124,18 +131,27 @@ class CryptoService {
    * [getEncryptedPIN description]
    * @return {[type]}           [description]
    */
-  getEncryptedPIN(PIN_buffer, card_number){
-    if(this.keys.pin_key.key){
-      this.log.info('Clear PIN block:     [' + this.pinblock.get(PIN_buffer, card_number) + ']');
+  getEncryptedPIN(PIN_buffer, card_number)
+  {
+    this.log.info('JFRD services\\crypto.js line 129');
+    if(this.keys.pin_key.key)
+	{
+      this.log.info('JFRD services\crypto.js line 132');
+	  let pinblock = this.pinblock.get(PIN_buffer, card_number);
+      this.log.info('Clear PIN block:     [' + pinblock + ']');
+      this.log.info('JFRD services\crypto.js line 135 pin_key >' + this.keys.pin_key.key + '<');
 
-      let encrypted_pinblock = des3.ecb_encrypt(this.keys.pin_key.key, this.pinblock.get(PIN_buffer, card_number));
+      let encrypted_pinblock = des3.ecb_encrypt(this.keys.pin_key.key, pinblock);
       this.log.info('Encrypted PIN block: [' + encrypted_pinblock + ']');
 
       let atm_pinblock = this.pinblock.encode_to_atm_format(encrypted_pinblock);
       this.log.info('Formatted PIN block: [' + atm_pinblock + ']');
       
       return atm_pinblock;
-    } else {
+    } 
+	else 
+	{
+      this.log.info('JFRD services\crypto.js line 145');
       this.log.error('Terminal key is not set, unable to encrypt PIN block');
       return null;
     }

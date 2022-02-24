@@ -87,7 +87,8 @@ class Builder{
    */
   buildUnsolicited(object){
     let message = '';
-    if(object.message_subclass === 'Transaction Request'){
+    if(object.message_subclass === 'Transaction Request')
+	{
       message += '1\x1C' +  this.luno + '\x1C\x1C';
       object.time_variant_number ? message += object.time_variant_number : message += '';
       message += '\x1C' + object.top_of_receipt + object.message_coordination_number + '\x1C';
@@ -97,6 +98,11 @@ class Builder{
         message += '\x1C';
       });
     }
+    if(object.message_subclass === 'Power Failure')
+	{
+      message += '2\x1C' +  this.luno + '\x1C\x1C';
+	  message += 'B' + object.config_id;
+	}
     return message;
   }
 
