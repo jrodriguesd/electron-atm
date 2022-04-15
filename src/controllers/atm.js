@@ -4,6 +4,7 @@ const FITsService = require('atm-fits');
 const CryptoService = require('../services/crypto.js');
 const DisplayService = require('../services/display.js');
 const OperationCodeBufferService = require('atm-opcode-buffer');
+const CassettesService = require('atm-cassettes');
 const Trace = require('atm-trace');
 const Pinblock = require('pinblock');
 const des3 = require('node-cardcrypto').des;
@@ -21,6 +22,7 @@ class ATM {
     this.display = new DisplayService(this.screens, log);
     this.pinblock = new Pinblock();
     this.opcode = new OperationCodeBufferService();
+    this.cassettes = new CassettesService(settings, log, this.trace);
     this.hardware = new ATMHardwareService();
 
     this.setStatus('Offline');
@@ -236,6 +238,12 @@ class ATM {
 	  host.luno = data.LUNO;
       settings.set('host', host);
       return this.replySolicitedStatus('Ready');
+
+    case 'Currency Cassette Mapping Table':
+	  if ( this.cassettes.add(data.cassettes) )
+        return this.replySolicitedStatus('Ready');
+      else
+        return this.replySolicitedStatus('Command Reject');
 
     default:
       this.log.error('ATM.processDataCommand(): unknown message identifier: ', data.message_identifier);
@@ -1029,6 +1037,23 @@ class ATM {
     this.setStatus('Processing Card');
   }
 
+  zeroPad(val, len)
+  {
+	  return String(val).padStart(len, '0');
+  }
+
+  getCassettesCounters(type)
+  {
+    let retStr = '';
+	for (const property in this.cassettes.cassettes) 
+	{
+		let cassete = this.cassettes.cassettes[property];
+		retStr += this.zeroPad( cassete[type], 5);
+    }
+
+	return retStr;
+  }
+
   /**
    * [initCounters description]
    * @return {[type]} [description]
@@ -1040,10 +1065,10 @@ class ATM {
     this.supply_counters = {};
     this.supply_counters.tsn = '0000';
     this.supply_counters.transaction_count = '0000000';
-    this.supply_counters.notes_in_cassettes = '00011000220003300044';
-    this.supply_counters.notes_rejected = '00000000000000000000';
-    this.supply_counters.notes_dispensed = '00000000000000000000';
-    this.supply_counters.last_trxn_notes_dispensed = '00000000000000000000';
+    this.supply_counters.notes_in_cassettes = this.getCassettesCounters('remaining');
+    this.supply_counters.notes_rejected = this.getCassettesCounters('rejected');
+    this.supply_counters.notes_dispensed = this.getCassettesCounters('dispensed');
+    this.supply_counters.last_trxn_notes_dispensed = this.getCassettesCounters('last_trxn_dispensed');
     this.supply_counters.card_captured = '00000';
     this.supply_counters.envelopes_deposited = '00000';
     this.supply_counters.camera_film_remaining = '00000';

@@ -64,6 +64,7 @@
     "atm-screentext": "git://github.com/jrodriguesd/atm-screentext",
     "atm-state-levels": "^1.0.6",
     "atm-states": "git://github.com/jrodriguesd/atm-states",
+    "atm-cassettes": "git://github.com/jrodriguesd/atm-cassettes",
     "atm-timestamp": "^1.1.0",
     "atm-trace": "git://github.com/jrodriguesd/atm-trace",
     "babel-preset-env": "^1.6.1",
