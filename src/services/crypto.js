@@ -10,81 +10,22 @@ class CryptoService {
     this.keys = {
       master_key: {
         key: '', 
-        check_value: ''},
-      pin_key: {
+        check_value: ''
+	  },
+      comms_key: {
         key: '', 
-        check_value: ''}
+        check_value: ''
+	  },
+      mac_key: {
+        key: '', 
+        check_value: ''
+	  }
     };
 
     (settings.get('master_key')) ? this.setMasterKey(settings.get('master_key')) : this.setMasterKey('');
-    (settings.get('pin_key')) ? this.setTerminalKey(settings.get('pin_key')) : this.setTerminalKey('');
-  }
-  
-  /**
-   * [setMasterKey description]
-   * @param {[type]} key [description]
-   */
-  setMasterKey(key){
-    this.keys.master_key.key = key;
-    this.settings.set('master_key', key);
+    (settings.get('comms_key')) ? this.setCommsKey(settings.get('comms_key')) : this.setCommsKey('');
   }
 
-  /**
-   * [setTerminalKey description]
-   * @param {[type]} key [description]
-   */
-  setTerminalKey(key){
-    this.keys.pin_key.key = key;
-    this.settings.set('pin_key', key);
-  }
-
-  /**
-   * [getKeyCheckValue description]
-   * @param  {[type]} key [description]
-   * @return {[type]}     [description]
-   */
-  getKeyCheckValue(key){
-    let kcv = des3.ecb_encrypt(key, '00000000000000000000000000000000');
-    if(kcv)
-      return kcv.substr(0, 6);
-    else
-      return null;
-  }
-
-  /**
-   * [getTerminalKey description]
-   * @return {[type]} [description]
-   */
-  getTerminalKey()
-  {
-	this.keys.pin_key.key = settings.get('pin_key')
-    return [this.keys.pin_key.key, this.getKeyCheckValue(this.keys.pin_key.key)];
-  }
-
-
-  /**
-   * [getMasterKey description]
-   * @return {[type]} [description]
-   */
-  getMasterKey()
-  {
-	this.keys.master_key.key = settings.get('master_key')
-    return [this.keys.master_key.key, this.getKeyCheckValue(this.keys.master_key.key)] ;
-  }
-
-  getKey(type)
-  {
-    switch(type)
-	{
-      case 'master':
-        return this.getMasterKey();
-	  
-      case 'comms':
-      case 'pin':
-        return this.getTerminalKey();
-    }
-  }
-  
   /**
    * [dec2hex convert decimal string to hex string, e.g. 040198145193087203201076202216192211251240251237 to 28C691C157CBC94CCAD8C0D3FBF0FBED]
    * @param  {[type]} dec_string [decimal string ]
@@ -101,30 +42,121 @@ class CryptoService {
   }
 
   /**
-   * [setCommsKey description]
+   * [decryptWithMasterKey description]
    * @param {[type]} key_decimal [description]
    * @param {[type]} length      [description]
    */
-  setCommsKey(key_decimal, length){
-    let comms_key = this.dec2hex(key_decimal);
+  decryptWithMasterKey(key_decimal, length) {
+    let key = this.dec2hex(key_decimal);
     let expected_key_length = parseInt(length, 16) / 1.5;
 
-    if(comms_key.length !== expected_key_length){
-      this.log.error('Key length mismatch. New key has length ' + comms_key.length + ', but expected length is ' + expected_key_length);
-      return false;
+    if(key.length !== expected_key_length){
+      this.log.error('Key length mismatch. New key has length ' + key.length + ', but expected length is ' + expected_key_length);
+      return null;
     }
 
-    this.log.info('New comms key received: ' + comms_key);
+    this.log.info('key received: ' + key);
 	this.keys.master_key.key = settings.get('master_key');
     if(!this.keys.master_key.key){
       this.log.error('Invalid master key: ' + this.keys.master_key.key);
-      return false;
+      return null;
     }
 
-    this.keys.pin_key.key = des3.ecb_decrypt(this.keys.master_key.key, comms_key);
-    this.log.info('New comms key value: ' + this.keys.pin_key.key);
-    this.settings.set('pin_key', this.keys.pin_key.key);
+    let decryptedMACKey = des3.ecb_decrypt(this.keys.master_key.key, key);
+    this.log.info('key value: ' + decryptedMACKey);
+	return decryptedMACKey;
+  }
+
+  /**
+   * [setCommsKey description]
+   * @param {[type]} key [description]
+   */
+  setCommsKey(key){
+    this.keys.comms_key.key = key;
+    this.log.info('New comms key value: ' + this.keys.comms_key.key);
+    this.settings.set('comms_key', this.keys.comms_key.key);
     return true;
+  }
+
+  /**
+   * [setMasterKey description]
+   * @param {[type]} key [description]
+   */
+  setMasterKey(key){
+    this.keys.master_key.key = key;
+    this.log.info('New master key value: ' + this.keys.comms_key.key);
+    this.settings.set('master_key', key);
+  }
+
+  /**
+   * [setMACKey description]
+   * @param {[type]} key [description]
+   */
+  setMACKey(key)
+  {
+    this.keys.mac_key.key = key;
+    this.log.info('New MAC key value: ' + this.keys.mac_key.key);
+    this.settings.set('mac_key', this.keys.mac_key.key);
+    return true;
+  }
+
+  /**
+   * [getKeyCheckValue description]
+   * @param  {[type]} key [description]
+   * @return {[type]}     [description]
+   */
+  getKeyCheckValue(key){
+    let kcv = des3.ecb_encrypt(key, '00000000000000000000000000000000');
+    if(kcv)
+      return kcv.substr(0, 6);
+    else
+      return null;
+  }
+
+  /**
+   * [getCommsKey description]
+   * @return {[type]} [description]
+   */
+  getCommsKey()
+  {
+	this.keys.comms_key.key = settings.get('comms_key')
+    return [this.keys.comms_key.key, this.getKeyCheckValue(this.keys.comms_key.key)];
+  }
+
+  /**
+   * [getMasterKey description]
+   * @return {[type]} [description]
+   */
+  getMasterKey()
+  {
+	this.keys.master_key.key = settings.get('master_key')
+    return [this.keys.master_key.key, this.getKeyCheckValue(this.keys.master_key.key)] ;
+  }
+
+  /**
+   * [getMACKey description]
+   * @return {[type]} [description]
+   */
+  getMACKey()
+  {
+	this.keys.mac_key.key = settings.get('mac_key')
+    return [this.keys.mac_key.key, this.getKeyCheckValue(this.keys.mac_key.key)] ;
+  }
+
+
+  getKey(type)
+  {
+    switch(type)
+	{
+      case 'master':
+        return this.getMasterKey();
+
+      case 'comms':
+        return this.getCommsKey();
+
+      case 'mac':
+        return this.getMACKey();
+    }
   }
 
   /**
@@ -134,14 +166,14 @@ class CryptoService {
   getEncryptedPIN(PIN_buffer, card_number)
   {
     this.log.info('JFRD services\\crypto.js line 129');
-    if(this.keys.pin_key.key)
+    if(this.keys.comms_key.key)
 	{
       this.log.info('JFRD services\crypto.js line 132');
 	  let pinblock = this.pinblock.get(PIN_buffer, card_number);
       this.log.info('Clear PIN block:     [' + pinblock + ']');
-      this.log.info('JFRD services\crypto.js line 135 pin_key >' + this.keys.pin_key.key + '<');
+      this.log.info('JFRD services\crypto.js line 135 comms_key >' + this.keys.comms_key.key + '<');
 
-      let encrypted_pinblock = des3.ecb_encrypt(this.keys.pin_key.key, pinblock);
+      let encrypted_pinblock = des3.ecb_encrypt(this.keys.comms_key.key, pinblock);
       this.log.info('Encrypted PIN block: [' + encrypted_pinblock + ']');
 
       let atm_pinblock = this.pinblock.encode_to_atm_format(encrypted_pinblock);

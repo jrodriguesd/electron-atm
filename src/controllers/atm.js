@@ -263,17 +263,42 @@ class ATM {
       this.setFDKsActiveMask(data.active_keys);
     }
     
-    this.log.info('JFRD controllers\\atm.js  processInteractiveTransactionResponse(data) 251');
+    this.log.info('JFRD controllers\\atm.js  processInteractiveTransactionResponse(data) 266');
     this.display.setScreen(this.screens.parseDynamicScreenData(data.screen_data_field));
-    this.log.info('JFRD controllers\\atm.js  processInteractiveTransactionResponse(data) 253');
+    this.log.info('JFRD controllers\\atm.js  processInteractiveTransactionResponse(data) 268');
     return this.replySolicitedStatus('Ready');
   }
 
   processExtendedEncKeyInfo(data){
+	let decryptedKey = null;
     switch(data.modifier){
-    case 'Decipher new comms key with current master key':
-      if( this.crypto.setCommsKey(data.new_key_data, data.new_key_length) )
+    case 'Decipher new master key with current master key':
+	  decryptedKey = this.crypto.decryptWithMasterKey(data.new_key_data, data.new_key_length);
+	  if (decryptedKey != null)
+	  {
+	    this.crypto.setMasterKey( decryptedKey );
         return this.replySolicitedStatus('Ready');
+	  }
+      else
+        return this.replySolicitedStatus('Command Reject');
+
+    case 'Decipher new comms key with current master key':
+	  decryptedKey = this.crypto.decryptWithMasterKey(data.new_key_data, data.new_key_length);
+	  if (decryptedKey != null)
+	  {
+	    this.crypto.setCommsKey( decryptedKey );
+        return this.replySolicitedStatus('Ready');
+	  }
+      else
+        return this.replySolicitedStatus('Command Reject');
+
+    case 'Decipher new MAC key with current master key':
+	  decryptedKey = this.crypto.decryptWithMasterKey(data.new_key_data, data.new_key_length);
+	  if (decryptedKey != null)
+	  {
+	    this.crypto.setMACKey( decryptedKey );
+        return this.replySolicitedStatus('Ready');
+	  }
       else
         return this.replySolicitedStatus('Command Reject');
 

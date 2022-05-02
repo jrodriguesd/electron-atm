@@ -11,7 +11,7 @@ $(function(){
   }
 
   let keys = {};
-  ['master', 'pin'].forEach( (type) => {
+  ['master', 'comms'].forEach( (type) => {
     keys[type] = settings.get(type + '_key');
     if(keys[type]){
       $('#settings-' + type + '-key').val(keys[type]);

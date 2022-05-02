@@ -29,10 +29,10 @@ const log = new Log();
 const s = new CryptoService(settings, log);
 
 s.setMasterKey('B6D55EABAD23BC4FD558F8D619A21C34');
-s.setTerminalKey('DEADBEEFDEADBEEFDEADBEEFDEADBEEF');
+s.setCommsKey('DEADBEEFDEADBEEFDEADBEEFDEADBEEF');
  
 test('should get terminal key', t => {
-  t.deepEqual(s.getTerminalKey(), ['DEADBEEFDEADBEEFDEADBEEFDEADBEEF', '2AE358']);
+  t.deepEqual(s.getCommsKey(), ['DEADBEEFDEADBEEFDEADBEEFDEADBEEF', '2AE358']);
 });
 
 test('should get master key', t => {
@@ -40,7 +40,6 @@ test('should get master key', t => {
 });
 
 test('should get terminal key by type', t => {
-  t.deepEqual(s.getKey('pin'), ['DEADBEEFDEADBEEFDEADBEEFDEADBEEF', '2AE358']);
   t.deepEqual(s.getKey('comms'), ['DEADBEEFDEADBEEFDEADBEEFDEADBEEF', '2AE358']);
 });
 
@@ -52,10 +51,10 @@ test('should get master key by type', t => {
 test('should set and store the terminal key', t => {
   settings.set = sinon.spy();
 
-  t.deepEqual(s.getTerminalKey(), ['DEADBEEFDEADBEEFDEADBEEFDEADBEEF', '2AE358']);
-  s.setTerminalKey('B667E96A6D5C961CB667E96A6D5C961C');
-  t.deepEqual(s.getTerminalKey(), ['B667E96A6D5C961CB667E96A6D5C961C', '900A01']);
-  t.true(settings.set.calledWith('pin_key', 'B667E96A6D5C961CB667E96A6D5C961C'));
+  t.deepEqual(s.getCommsKey(), ['DEADBEEFDEADBEEFDEADBEEFDEADBEEF', '2AE358']);
+  s.setCommsKey('B667E96A6D5C961CB667E96A6D5C961C');
+  t.deepEqual(s.getCommsKey(), ['B667E96A6D5C961CB667E96A6D5C961C', '900A01']);
+  t.true(settings.set.calledWith('comms_key', 'B667E96A6D5C961CB667E96A6D5C961C'));
 });
 
 test('should set and store the master key', t => {
@@ -88,7 +87,7 @@ test('should convert decimal string to hex string', t => {
 
 test('should change terminal PIN key', t => {
   s.setMasterKey('B6D55EABAD23BC4FD558F8D619A21C34');
-  s.setTerminalKey('DEADBEEFDEADBEEFDEADBEEFDEADBEEF');
+  s.setCommsKey('DEADBEEFDEADBEEFDEADBEEFDEADBEEF');
   let data = {
     message_class: 'Data Command',
     LUNO: '000',
@@ -102,14 +101,14 @@ test('should change terminal PIN key', t => {
     new_key_data: '040198145193087203201076202216192211251240251237' is decimal representation of 28C691C157CBC94CCAD8C0D3FBF0FBED
     28C691C157CBC94CCAD8C0D3FBF0FBED is 7B278B03B439DDCACF8B3333AC591BCA encrypted under B6D55EABAD23BC4FD558F8D619A21C34.
    */
-  t.deepEqual(s.getTerminalKey(), ['DEADBEEFDEADBEEFDEADBEEFDEADBEEF', '2AE358']);
+  t.deepEqual(s.getCommsKey(), ['DEADBEEFDEADBEEFDEADBEEFDEADBEEF', '2AE358']);
   t.true(s.setCommsKey(data.new_key_data, data.new_key_length));
-  t.deepEqual(s.getTerminalKey(), ['7B278B03B439DDCACF8B3333AC591BCA', '41DD5C']);
+  t.deepEqual(s.getCommsKey(), ['7B278B03B439DDCACF8B3333AC591BCA', '41DD5C']);
 });
 
 test('should raise if master key is empty', t => {
   s.setMasterKey('B6D55EABAD23BC4FD558F8D619A21C34');
-  s.setTerminalKey('DEADBEEFDEADBEEFDEADBEEFDEADBEEF');
+  s.setCommsKey('DEADBEEFDEADBEEFDEADBEEFDEADBEEF');
   let data = {
     message_class: 'Data Command',
     LUNO: '000',
@@ -137,12 +136,12 @@ test('should log error in case of key length mismatch', t => {
  * getEncryptedPIN()
  */
 test('should get encrypted PIN', t => {
-  s.setTerminalKey('DEADBEEFDEADBEEFDEADBEEFDEADBEEF');
+  s.setCommsKey('DEADBEEFDEADBEEFDEADBEEFDEADBEEF');
   t.is(s.getEncryptedPIN('1234', '4000001234562000'), '<3;:1>04=88654<4');
 });
 
 test('should return null if no terminal key', t => {
-  s.setTerminalKey();
+  s.setCommsKey();
   t.is(s.getEncryptedPIN('1234', '4000001234562000'), null);
 });    
 
